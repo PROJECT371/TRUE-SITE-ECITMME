@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { store, eventos, addEvento, removeEvento } from "@/data/store";
+import { store, eventos, addEvento, removeEvento, disciplinas, addDisciplina, removeDisciplina, clubes, addClube, removeClube, solicitacoes, updateSolicitacaoStatus, removeSolicitacao, CURSOS, ANOS, TURMAS, salaId, avisosSalas, addAvisoSala, removeAvisoSala } from "@/data/store";
 
 interface Props {
   onToast: (msg: string) => void;
@@ -66,6 +66,26 @@ export default function Admin({ onToast }: Props) {
   const [lvGenero, setLvGenero] = useState('literatura');
   const [lvQtd, setLvQtd] = useState(1);
 
+  // Disciplinas form
+  const [dsNome, setDsNome] = useState('');
+  const [dsProf, setDsProf] = useState('');
+  const [dsHorario, setDsHorario] = useState('');
+  const [dsCor, setDsCor] = useState('#c9993a');
+  const [dsConteudo, setDsConteudo] = useState('');
+  const [dsAtividades, setDsAtividades] = useState('');
+
+  // Clubes form
+  const [clNome, setClNome] = useState('');
+  const [clProf, setClProf] = useState('');
+  const [clHorario, setClHorario] = useState('');
+  const [clInteg, setClInteg] = useState(0);
+
+  // Salas form
+  const [slCurso, setSlCurso] = useState(CURSOS[0].slug);
+  const [slAno, setSlAno] = useState(1);
+  const [slTurma, setSlTurma] = useState('A');
+  const [slTexto, setSlTexto] = useState('');
+
   function checkAdmin() {
     if (pwd === ADMIN_PASS) { setUnlocked(true); setError(''); }
     else setError('Senha incorreta. Tente novamente.');
@@ -131,11 +151,71 @@ export default function Admin({ onToast }: Props) {
     onToast('✅ Livro cadastrado com sucesso!');
   }
 
+  function addDisc() {
+    if (!dsNome || !dsProf) { onToast('⚠️ Preencha todos os campos obrigatórios'); return; }
+    addDisciplina({
+      nome: dsNome, professor: dsProf, horario: dsHorario, cor: dsCor,
+      conteudo: dsConteudo.split(',').map(s => s.trim()).filter(Boolean),
+      atividades: dsAtividades.split(',').map(s => s.trim()).filter(Boolean),
+    });
+    setDsNome(''); setDsProf(''); setDsHorario(''); setDsConteudo(''); setDsAtividades('');
+    forceUpdate(n => n + 1);
+    onToast('✅ Disciplina cadastrada com sucesso!');
+  }
+  function delDisc(i: number, nome: string) {
+    if (!window.confirm(`Remover a disciplina "${nome}"?`)) return;
+    removeDisciplina(i);
+    forceUpdate(n => n + 1);
+    onToast('🗑️ Disciplina removida.');
+  }
+
+  function addClb() {
+    if (!clNome || !clProf) { onToast('⚠️ Preencha todos os campos obrigatórios'); return; }
+    addClube({ nome: clNome, professor: clProf, horario: clHorario, integrantes: clInteg });
+    setClNome(''); setClProf(''); setClHorario(''); setClInteg(0);
+    forceUpdate(n => n + 1);
+    onToast('✅ Clube cadastrado com sucesso!');
+  }
+  function delClb(i: number, nome: string) {
+    if (!window.confirm(`Remover o clube "${nome}"?`)) return;
+    removeClube(i);
+    forceUpdate(n => n + 1);
+    onToast('🗑️ Clube removido.');
+  }
+
+  function setStatusSolic(id: number, status: 'em análise' | 'aprovado' | 'finalizado') {
+    updateSolicitacaoStatus(id, status);
+    forceUpdate(n => n + 1);
+    onToast('✅ Status atualizado.');
+  }
+  function delSolic(id: number, tipo: string) {
+    if (!window.confirm(`Excluir a solicitação "${tipo}"?`)) return;
+    removeSolicitacao(id);
+    forceUpdate(n => n + 1);
+    onToast('🗑️ Solicitação removida.');
+  }
+
+  function addAvisoSalaForm() {
+    if (!slTexto) { onToast('⚠️ Escreva o aviso'); return; }
+    addAvisoSala(salaId(slCurso, slAno, slTurma), slTexto);
+    setSlTexto('');
+    forceUpdate(n => n + 1);
+    onToast('✅ Aviso publicado na turma!');
+  }
+  function delAvisoSala(id: string, i: number) {
+    removeAvisoSala(id, i);
+    forceUpdate(n => n + 1);
+  }
+
   const adminTabs = [
     { id: 'eventos',    label: '🗓️ Eventos' },
     { id: 'avisos',     label: '🔔 Avisos' },
     { id: 'provas',     label: '📋 Provas' },
     { id: 'conteudos',  label: '📖 Conteúdos' },
+    { id: 'disciplinas', label: '📘 Disciplinas' },
+    { id: 'solicitacoes', label: '📝 Solicitações' },
+    { id: 'clubes',     label: '🎭 Clubes' },
+    { id: 'salas',      label: '🏫 Salas' },
     { id: 'cardapio',   label: '🍽️ Cardápio' },
     { id: 'jogos',      label: '🏆 Interclasse' },
     { id: 'livros',     label: '📚 Biblioteca' },
@@ -396,6 +476,155 @@ export default function Admin({ onToast }: Props) {
             <div className="form-group"><label>Quantidade</label><input type="number" min={1} value={lvQtd} onChange={e => setLvQtd(Number(e.target.value))} /></div>
           </div>
           <button className="p-btn p-btn-gold" onClick={addLivro}>+ Cadastrar Livro</button>
+        </div>
+      )}
+
+      {/* ── DISCIPLINAS ── */}
+      {adminTab === 'disciplinas' && (
+        <div>
+          <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Cadastrar Disciplina</h3>
+            <div className="grid-2">
+              <div className="form-group"><label>Nome da Disciplina</label><input type="text" placeholder="Ex: Matemática" value={dsNome} onChange={e => setDsNome(e.target.value)} /></div>
+              <div className="form-group"><label>Professor(a)</label><input type="text" placeholder="Ex: Profª. Ana Beatriz" value={dsProf} onChange={e => setDsProf(e.target.value)} /></div>
+              <div className="form-group"><label>Horário</label><input type="text" placeholder="Ex: Seg/Qua 07h30" value={dsHorario} onChange={e => setDsHorario(e.target.value)} /></div>
+              <div className="form-group"><label>Cor</label><input type="color" value={dsCor} onChange={e => setDsCor(e.target.value)} style={{ height: '42px', padding: '4px' }} /></div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}><label>Conteúdo (separar por vírgula)</label><textarea placeholder="Funções, Geometria analítica..." value={dsConteudo} onChange={e => setDsConteudo(e.target.value)} /></div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}><label>Atividades (separar por vírgula)</label><textarea placeholder="Trabalho — 08/07, Prova — 15/07" value={dsAtividades} onChange={e => setDsAtividades(e.target.value)} /></div>
+            </div>
+            <button className="p-btn p-btn-gold" onClick={addDisc}>+ Cadastrar Disciplina</button>
+          </div>
+          <div className="admin-form">
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
+              Disciplinas Cadastradas ({disciplinas.length})
+            </h3>
+            {disciplinas.length === 0 ? (
+              <div className="empty"><div className="empty-icon">📘</div><p>Nenhuma disciplina cadastrada</p></div>
+            ) : disciplinas.map((d, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.75rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: d.cor, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '.88rem', color: 'var(--navy)' }}>{d.nome}</div>
+                  <div style={{ fontSize: '.72rem', color: '#9ca3af' }}>{d.professor} · {d.horario}</div>
+                </div>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delDisc(i, d.nome)}>
+                  🗑️
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── SOLICITAÇÕES ── */}
+      {adminTab === 'solicitacoes' && (
+        <div className="admin-form">
+          <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
+            Solicitações da Secretaria ({solicitacoes.length})
+          </h3>
+          {solicitacoes.length === 0 ? (
+            <div className="empty"><div className="empty-icon">📭</div><p>Nenhuma solicitação recebida</p></div>
+          ) : solicitacoes.map(s => (
+            <div key={s.id} style={{ padding: '.8rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.5rem', gap: '.6rem' }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '.88rem', color: 'var(--navy)' }}>{s.tipo}</div>
+                  <div style={{ fontSize: '.72rem', color: '#9ca3af' }}>Solicitado em {s.data}</div>
+                </div>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delSolic(s.id, s.tipo)}>
+                  Excluir
+                </button>
+              </div>
+              <select
+                className="status-select"
+                value={s.status}
+                onChange={e => setStatusSolic(s.id, e.target.value as 'em análise' | 'aprovado' | 'finalizado')}
+                style={{ padding: '.45rem .8rem', borderRadius: '8px', border: '1.5px solid rgba(26,35,64,.15)', fontSize: '.82rem', background: 'var(--white)', color: 'var(--navy2)' }}
+              >
+                <option value="em análise">Em análise</option>
+                <option value="aprovado">Aprovado</option>
+                <option value="finalizado">Finalizado</option>
+              </select>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── CLUBES ── */}
+      {adminTab === 'clubes' && (
+        <div>
+          <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Cadastrar Clube</h3>
+            <div className="grid-2">
+              <div className="form-group"><label>Nome do Clube</label><input type="text" placeholder="Ex: Clube de Robótica" value={clNome} onChange={e => setClNome(e.target.value)} /></div>
+              <div className="form-group"><label>Professor Responsável</label><input type="text" placeholder="Nome do professor" value={clProf} onChange={e => setClProf(e.target.value)} /></div>
+              <div className="form-group"><label>Horário</label><input type="text" placeholder="Ex: Qui 14h" value={clHorario} onChange={e => setClHorario(e.target.value)} /></div>
+              <div className="form-group"><label>Integrantes</label><input type="number" min={0} value={clInteg} onChange={e => setClInteg(Number(e.target.value))} /></div>
+            </div>
+            <button className="p-btn p-btn-gold" onClick={addClb}>+ Cadastrar Clube</button>
+          </div>
+          <div className="admin-form">
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
+              Clubes Cadastrados ({clubes.length})
+            </h3>
+            {clubes.length === 0 ? (
+              <div className="empty"><div className="empty-icon">🎭</div><p>Nenhum clube cadastrado</p></div>
+            ) : clubes.map((c, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.75rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '.88rem', color: 'var(--navy)' }}>{c.nome}</div>
+                  <div style={{ fontSize: '.72rem', color: '#9ca3af' }}>{c.professor} · {c.horario} · {c.integrantes} integrantes</div>
+                </div>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delClb(i, c.nome)}>
+                  🗑️
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── SALAS ── */}
+      {adminTab === 'salas' && (
+        <div>
+          <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Publicar Aviso para Turma</h3>
+            <div className="grid-2">
+              <div className="form-group"><label>Curso</label>
+                <select value={slCurso} onChange={e => setSlCurso(e.target.value)}>
+                  {CURSOS.map(c => <option key={c.slug} value={c.slug}>{c.nome}</option>)}
+                </select>
+              </div>
+              <div className="form-group"><label>Ano</label>
+                <select value={slAno} onChange={e => setSlAno(Number(e.target.value))}>
+                  {ANOS.map(a => <option key={a} value={a}>{a}º Ano</option>)}
+                </select>
+              </div>
+              <div className="form-group"><label>Turma</label>
+                <select value={slTurma} onChange={e => setSlTurma(e.target.value)}>
+                  {TURMAS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}><label>Aviso</label><textarea placeholder="Escreva o aviso para esta turma..." value={slTexto} onChange={e => setSlTexto(e.target.value)} /></div>
+            </div>
+            <button className="p-btn p-btn-gold" onClick={addAvisoSalaForm}>+ Publicar Aviso</button>
+          </div>
+          <div className="admin-form">
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>Avisos Publicados</h3>
+            {Object.keys(avisosSalas).length === 0 || Object.values(avisosSalas).every(l => l.length === 0) ? (
+              <div className="empty"><div className="empty-icon">🏫</div><p>Nenhum aviso publicado ainda</p></div>
+            ) : Object.entries(avisosSalas).map(([id, lista]) => lista.map((texto, i) => (
+              <div key={`${id}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.7rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '.7rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em' }}>{id}</div>
+                  <div style={{ fontSize: '.85rem', color: 'var(--navy2)' }}>{texto}</div>
+                </div>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delAvisoSala(id, i)}>
+                  🗑️
+                </button>
+              </div>
+            )))}
+          </div>
         </div>
       )}
 
