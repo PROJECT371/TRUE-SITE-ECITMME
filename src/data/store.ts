@@ -131,3 +131,98 @@ export function turmaNome(t: string) {
   return '3º Ano';
 }
 
+/* ================= Disciplinas ================= */
+export type Disciplina = {
+  nome: string;
+  professor: string;
+  horario: string;
+  cor: string;
+  conteudo: string[];
+  atividades: string[];
+};
+
+export let disciplinas: Disciplina[] = [
+  { nome: 'Matemática', professor: 'Profª. Ana Beatriz', horario: 'Seg/Qua 07h30', cor: '#c9993a',
+    conteudo: ['Funções do 2º grau', 'Geometria analítica'], atividades: ['Trabalho — 08/07', 'Prova — 15/07'] },
+  { nome: 'Português', professor: 'Prof. Ricardo Melo', horario: 'Ter/Qui 08h20', cor: '#7c3aed',
+    conteudo: ['Figuras de linguagem', 'Redação dissertativa'], atividades: ['Redação — 10/07'] },
+  { nome: 'Biologia', professor: 'Profª. Camila Rocha', horario: 'Seg/Sex 09h10', cor: '#2e7d52',
+    conteudo: ['Genética', 'Ecologia'], atividades: ['Relatório — 12/07'] },
+  { nome: 'História', professor: 'Prof. Diego Farias', horario: 'Qua/Sex 10h00', cor: '#1e6fa0',
+    conteudo: ['Brasil Colônia', 'Revolução Industrial'], atividades: ['Seminário — 18/07'] },
+];
+
+export function addDisciplina(d: Disciplina) { disciplinas.push(d); }
+export function removeDisciplina(i: number) { disciplinas.splice(i, 1); }
+
+/* ================= Clubes ================= */
+export type Clube = {
+  nome: string;
+  professor: string;
+  horario: string;
+  integrantes: number;
+};
+
+export let clubes: Clube[] = [
+  { nome: 'Clube de Robótica', professor: 'Prof. Marcos Vinícius', horario: 'Qui 14h', integrantes: 18 },
+  { nome: 'Grêmio Estudantil', professor: 'Profª. Camila Rocha', horario: 'Seg 15h', integrantes: 24 },
+  { nome: 'Clube de Teatro', professor: 'Prof. Ricardo Melo', horario: 'Ter 14h30', integrantes: 15 },
+  { nome: 'Coral ECIT', professor: 'Profª. Juliana Prado', horario: 'Qua 13h', integrantes: 21 },
+];
+
+export function addClube(c: Clube) { clubes.push(c); }
+export function removeClube(i: number) { clubes.splice(i, 1); }
+
+/* ================= Secretaria: solicitações ================= */
+export type Solicitacao = {
+  id: number;
+  tipo: string;
+  data: string;
+  status: 'em análise' | 'aprovado' | 'finalizado';
+};
+
+let _solicitacaoId = 0;
+
+export let solicitacoes: Solicitacao[] = [];
+
+export function addSolicitacao(tipo: string) {
+  _solicitacaoId++;
+  const hoje = new Date();
+  const data = `${String(hoje.getDate()).padStart(2, '0')}/${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+  solicitacoes.unshift({ id: _solicitacaoId, tipo, data, status: 'em análise' });
+}
+
+export function updateSolicitacaoStatus(id: number, status: Solicitacao['status']) {
+  const s = solicitacoes.find(s => s.id === id);
+  if (s) s.status = status;
+}
+
+export function removeSolicitacao(id: number) {
+  const idx = solicitacoes.findIndex(s => s.id === id);
+  if (idx >= 0) solicitacoes.splice(idx, 1);
+}
+
+/* ================= Salas por curso, ano e turma ================= */
+export const CURSOS = [
+  { slug: 'agro', nome: 'Agronegócio' },
+  { slug: 'info', nome: 'Informática' },
+  { slug: 'jogos', nome: 'Programação de Jogos Digitais' },
+];
+export const ANOS = [1, 2, 3];
+export const TURMAS = ['A', 'B'];
+
+export function salaId(cursoSlug: string, ano: number, turma: string) {
+  return `${cursoSlug}${ano}${turma}`;
+}
+
+export let avisosSalas: Record<string, string[]> = {};
+
+export function addAvisoSala(id: string, texto: string) {
+  if (!avisosSalas[id]) avisosSalas[id] = [];
+  avisosSalas[id].unshift(texto);
+}
+
+export function removeAvisoSala(id: string, i: number) {
+  avisosSalas[id]?.splice(i, 1);
+}
+
