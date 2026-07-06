@@ -120,4 +120,3 @@ export default function Inicio({ onNavigate }: Props) {
     </div>
   );
 }
-
