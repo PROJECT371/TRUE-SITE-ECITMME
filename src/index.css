@@ -808,3 +808,56 @@
   .highlight-grid { grid-template-columns: 1fr; }
   .stats-row { grid-template-columns: 1fr; }
 }
+
+/* ═══════════════════════════════════════════════
+   MODO ESCURO
+═══════════════════════════════════════════════ */
+.dark {
+  --off: #0b1220;
+  --white: #141b2e;
+  --navy2: #e5e9f5;
+}
+.dark body { background: var(--off); color: var(--navy2); }
+
+.dark input, .dark select, .dark textarea {
+  background: #0f1626;
+  color: #e5e9f5;
+  border-color: rgba(255,255,255,.12);
+}
+.dark input::placeholder, .dark textarea::placeholder { color: #5b6785; }
+
+.dark .p-card-title, .dark .hc-value, .dark .content-title, .dark .book-title,
+.dark .event-hero-title, .dark .event-card-title, .dark .athlete-name,
+.dark .bib-book-title, .dark .bib-loan-name, .dark .rank-team,
+.dark .sec-title h2, .dark .modal-header h3, .dark h1, .dark h2, .dark h3,
+.dark .form-group label, .dark .bib-field label, .dark .p-table thead th,
+.dark .admin-nav-item, .dark .bib-admin-title {
+  color: #eaf0fb;
+}
+
+.dark .p-card-sub, .dark .hc-sub, .dark .content-meta, .dark .book-author,
+.dark .event-card-meta, .dark .event-hero-meta, .dark .event-hero-desc,
+.dark .stat-label, .dark .empty p, .dark .p-table tbody td, .dark td,
+.dark .bib-book-author, .dark .bib-loan-meta, .dark .aviso-card p,
+.dark .bib-admin-meta, .dark .page-sub, .dark .admin-form label {
+  color: #93a1c4;
+}
+
+.dark .p-card, .dark .highlight-card, .dark .athlete-card, .dark .book-card,
+.dark .content-item, .dark .event-hero, .dark .event-card, .dark .aviso-card,
+.dark .food-day, .dark .admin-form, .dark .modal, .dark .biblioteca-app,
+.dark .bib-book-card, .dark .bib-loan-card, .dark .bib-form-card,
+.dark .table-wrap, .dark .p-table {
+  background: var(--white);
+  border-color: rgba(255,255,255,.08);
+}
+
+.dark .p-tab { color: #93a1c4; border-color: rgba(255,255,255,.12); }
+.dark .p-tab.active, .dark .p-tab:hover { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+
+.dark .p-btn-outline { color: #eaf0fb; border-color: rgba(255,255,255,.2); }
+.dark .p-btn-outline:hover { background: rgba(255,255,255,.08); color: #eaf0fb; }
+
+.dark .empty-icon { color: #3a4560; }
+.dark .divider { background: rgba(255,255,255,.08); }
+.dark ::-webkit-scrollbar-track { background: var(--off); }

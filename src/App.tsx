@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import Inicio from "@/pages/Inicio";
+import Disciplinas from "@/pages/Disciplinas";
 import Biblioteca from "@/pages/Biblioteca";
 import Provas from "@/pages/Provas";
 import Conteudos from "@/pages/Conteudos";
 import Secretaria from "@/pages/Secretaria";
+import Clubes from "@/pages/Clubes";
+import Salas from "@/pages/Salas";
 import Cardapio from "@/pages/Cardapio";
 import Interclasse from "@/pages/Interclasse";
 import Eventos from "@/pages/Eventos";
@@ -11,14 +14,17 @@ import Admin from "@/pages/Admin";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineScreen from "@/components/OfflineScreen";
 
-type Section = 'inicio' | 'biblioteca' | 'provas' | 'conteudos' | 'secretaria' | 'cardapio' | 'interclasse' | 'eventos' | 'admin';
+type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'cardapio' | 'interclasse' | 'eventos' | 'admin';
 
 const NAV_ITEMS: Array<{ id: Section; label: string; icon: string }> = [
   { id: 'inicio',      label: 'Início',      icon: '🏠' },
+  { id: 'disciplinas', label: 'Disciplinas', icon: '📘' },
   { id: 'biblioteca',  label: 'Biblioteca',  icon: '📚' },
   { id: 'provas',      label: 'Provas',      icon: '📋' },
   { id: 'conteudos',   label: 'Conteúdos',   icon: '📖' },
   { id: 'secretaria',  label: 'Secretaria',  icon: '📢' },
+  { id: 'clubes',      label: 'Clubes',      icon: '🎭' },
+  { id: 'salas',       label: 'Salas',       icon: '🏫' },
   { id: 'cardapio',    label: 'Cardápio',    icon: '🍽️' },
   { id: 'interclasse', label: 'Interclasse', icon: '🏆' },
   { id: 'eventos',     label: 'Eventos',     icon: '🗓️' },
@@ -31,6 +37,14 @@ export default function App() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [toastId, setToastId] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    try { return localStorage.getItem('ecit_theme') === 'dark'; } catch { return false; }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkMode);
+    try { localStorage.setItem('ecit_theme', darkMode ? 'dark' : 'light'); } catch { /* noop */ }
+  }, [darkMode]);
 
   useEffect(() => {
     const goOnline  = () => setIsOnline(true);
@@ -96,9 +110,19 @@ export default function App() {
               <p>Mamanguape – Paraíba · SEDUC-PB</p>
             </div>
           </div>
-          <button className="btn-admin" onClick={() => navigate('admin')}>
-            ⚙️ Admin
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button
+              className="btn-admin"
+              style={{ background: 'rgba(255,255,255,.1)', color: 'var(--white)', boxShadow: 'none', marginRight: '.6rem' }}
+              onClick={() => setDarkMode(d => !d)}
+              title="Alternar modo escuro"
+            >
+              {darkMode ? '☀️' : '🌙'}
+            </button>
+            <button className="btn-admin" onClick={() => navigate('admin')}>
+              ⚙️ Admin
+            </button>
+          </div>
         </div>
 
         {/* Nav */}
@@ -121,10 +145,13 @@ export default function App() {
       {/* Main */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2.5rem 1.5rem', minHeight: '70vh' }}>
         {section === 'inicio'      && <Inicio onNavigate={navigate} />}
+        {section === 'disciplinas' && <Disciplinas />}
         {section === 'biblioteca'  && <Biblioteca onToast={showToast} />}
         {section === 'provas'      && <Provas />}
         {section === 'conteudos'   && <Conteudos />}
-        {section === 'secretaria'  && <Secretaria />}
+        {section === 'secretaria'  && <Secretaria onToast={showToast} />}
+        {section === 'clubes'      && <Clubes />}
+        {section === 'salas'       && <Salas />}
         {section === 'cardapio'    && <Cardapio />}
         {section === 'interclasse' && <Interclasse />}
         {section === 'eventos'     && <Eventos />}
