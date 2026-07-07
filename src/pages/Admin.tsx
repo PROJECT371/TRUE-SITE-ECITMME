@@ -7,6 +7,7 @@ import {
   listarClubes, criarClube, removerClube, type ClubeDB,
   listarAvisosSalas, criarAvisoSala, removerAvisoSala, type AvisoSalaDB,
   listarSolicitacoes, atualizarStatusSolicitacao, removerSolicitacao, type SolicitacaoDB,
+  listarHorarios, criarHorario, removerHorario, type HorarioDB,
 } from "@/lib/dados";
 
 interface Props {
@@ -29,6 +30,7 @@ export default function Admin({ onToast }: Props) {
   const [clubesList, setClubesList] = useState<ClubeDB[]>([]);
   const [avisosSalasList, setAvisosSalasList] = useState<AvisoSalaDB[]>([]);
   const [solicitacoesList, setSolicitacoesList] = useState<SolicitacaoDB[]>([]);
+  const [horariosList, setHorariosList] = useState<HorarioDB[]>([]);
 
   useEffect(() => {
     listarEventos().then(setEventosList);
@@ -37,6 +39,7 @@ export default function Admin({ onToast }: Props) {
     listarClubes().then(setClubesList);
     listarAvisosSalas().then(setAvisosSalasList);
     listarSolicitacoes().then(setSolicitacoesList);
+    listarHorarios().then(setHorariosList);
   }, []);
 
   // Eventos form
@@ -111,6 +114,17 @@ export default function Admin({ onToast }: Props) {
   const [slAno, setSlAno] = useState(1);
   const [slTurma, setSlTurma] = useState('A');
   const [slTexto, setSlTexto] = useState('');
+
+  // Horários form
+  const [hrCurso, setHrCurso] = useState(CURSOS[0].slug);
+  const [hrAno, setHrAno] = useState(1);
+  const [hrTurma, setHrTurma] = useState('A');
+  const [hrDia, setHrDia] = useState<'Seg' | 'Ter' | 'Qua' | 'Qui' | 'Sex'>('Seg');
+  const [hrHorario, setHrHorario] = useState('');
+  const [hrDisciplina, setHrDisciplina] = useState('');
+  const [hrSala, setHrSala] = useState('');
+  const [hrProfessor, setHrProfessor] = useState('');
+  const [hrOrdem, setHrOrdem] = useState(1);
 
   function checkAdmin() {
     if (pwd === ADMIN_PASS) { setUnlocked(true); setError(''); }
@@ -298,10 +312,41 @@ export default function Admin({ onToast }: Props) {
     }
   }
 
+  async function addHorario() {
+    if (!hrHorario || !hrDisciplina) { onToast('⚠️ Preencha horário e disciplina'); return; }
+    try {
+      await criarHorario({
+        turma_id: salaId(hrCurso, hrAno, hrTurma),
+        dia: hrDia,
+        horario: hrHorario,
+        disciplina: hrDisciplina,
+        sala: hrSala || null,
+        professor: hrProfessor || null,
+        ordem: hrOrdem,
+      });
+      setHorariosList(await listarHorarios());
+      setHrHorario(''); setHrDisciplina(''); setHrSala(''); setHrProfessor('');
+      onToast('✅ Aula adicionada ao horário!');
+    } catch {
+      onToast('❌ Não foi possível adicionar.');
+    }
+  }
+
+  async function delHorario(id: string) {
+    try {
+      await removerHorario(id);
+      setHorariosList(await listarHorarios());
+      onToast('🗑️ Removido do horário.');
+    } catch {
+      onToast('❌ Não foi possível remover.');
+    }
+  }
+
   const adminTabs = [
     { id: 'eventos',    label: '🗓️ Eventos' },
     { id: 'avisos',     label: '🔔 Avisos' },
     { id: 'provas',     label: '📋 Provas' },
+    { id: 'horarios',   label: '🗓️ Horários' },
     { id: 'conteudos',  label: '📖 Conteúdos' },
     { id: 'disciplinas', label: '📘 Disciplinas' },
     { id: 'solicitacoes', label: '📝 Solicitações' },
@@ -522,6 +567,72 @@ export default function Admin({ onToast }: Props) {
         </div>
       )}
 
+      {/* ── HORÁRIOS ── */}
+      {adminTab === 'horarios' && (
+        <div>
+          <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Adicionar Aula ao Horário</h3>
+            <div className="grid-3">
+              <div className="form-group"><label>Curso</label>
+                <select value={hrCurso} onChange={e => setHrCurso(e.target.value)}>
+                  {CURSOS.map(c => <option key={c.slug} value={c.slug}>{c.nome}</option>)}
+                </select>
+              </div>
+              <div className="form-group"><label>Ano</label>
+                <select value={hrAno} onChange={e => setHrAno(Number(e.target.value))}>
+                  {ANOS.map(a => <option key={a} value={a}>{a}º Ano</option>)}
+                </select>
+              </div>
+              <div className="form-group"><label>Turma</label>
+                <select value={hrTurma} onChange={e => setHrTurma(e.target.value)}>
+                  {TURMAS.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid-2">
+              <div className="form-group"><label>Dia</label>
+                <select value={hrDia} onChange={e => setHrDia(e.target.value as typeof hrDia)}>
+                  <option value="Seg">Segunda-feira</option>
+                  <option value="Ter">Terça-feira</option>
+                  <option value="Qua">Quarta-feira</option>
+                  <option value="Qui">Quinta-feira</option>
+                  <option value="Sex">Sexta-feira</option>
+                </select>
+              </div>
+              <div className="form-group"><label>Horário (texto livre)</label>
+                <input type="text" placeholder="Ex: 07:30 - 08:20" value={hrHorario} onChange={e => setHrHorario(e.target.value)} />
+              </div>
+            </div>
+            <div className="form-group"><label>Disciplina</label><input type="text" placeholder="Ex: Matemática" value={hrDisciplina} onChange={e => setHrDisciplina(e.target.value)} /></div>
+            <div className="grid-2">
+              <div className="form-group"><label>Sala</label><input type="text" placeholder="Ex: Sala 04 - Matemática" value={hrSala} onChange={e => setHrSala(e.target.value)} /></div>
+              <div className="form-group"><label>Professor(a)</label><input type="text" placeholder="Ex: Luiz" value={hrProfessor} onChange={e => setHrProfessor(e.target.value)} /></div>
+            </div>
+            <div className="form-group"><label>Ordem no dia (1, 2, 3...)</label><input type="number" min={1} value={hrOrdem} onChange={e => setHrOrdem(Number(e.target.value))} /></div>
+            <button className="p-btn p-btn-gold" onClick={addHorario}>+ Adicionar Aula</button>
+          </div>
+          <div className="admin-form">
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
+              Aulas Cadastradas ({horariosList.length})
+            </h3>
+            {horariosList.length === 0 ? (
+              <div className="empty"><div className="empty-icon">🗓️</div><p>Nenhuma aula cadastrada ainda</p></div>
+            ) : horariosList.map(h => (
+              <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.7rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '.7rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h.turma_id} · {h.dia} · {h.horario}</div>
+                  <div style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--navy)' }}>{h.disciplina}</div>
+                  <div style={{ fontSize: '.75rem', color: '#6b7280' }}>{h.sala}{h.professor ? ` · ${h.professor}` : ''}</div>
+                </div>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delHorario(h.id)}>
+                  🗑️
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── CONTEÚDOS ── */}
       {adminTab === 'conteudos' && (
         <div className="admin-form">
@@ -666,6 +777,9 @@ export default function Admin({ onToast }: Props) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.5rem', gap: '.6rem' }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '.88rem', color: 'var(--navy)' }}>{s.tipo}</div>
+                  <div style={{ fontSize: '.72rem', color: '#9ca3af' }}>
+                    {s.aluno_nome ? `👤 ${s.aluno_nome}` : '👤 Visitante (sem login)'}
+                  </div>
                 </div>
                 <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delSolic(s.id, s.tipo)}>
                   Excluir
@@ -772,3 +886,4 @@ export default function Admin({ onToast }: Props) {
     </div>
   );
 }
+
