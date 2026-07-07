@@ -10,22 +10,6 @@ export const store = {
     { disc: 'Sociologia', serie: '3a', bim: '1º Bimestre', prof: 'Prof. João',     conteudo: 'Estrutura social, Classes e mobilidade, Globalização' },
     { disc: 'Inglês',     serie: '3a', bim: '1º Bimestre', prof: 'Profª. Beatriz', conteudo: 'Simple Past, Present Perfect, Reading comprehension' },
   ],
-  cardapio: {
-    almoco: [
-      { dia: 'Segunda-feira', prato: 'Frango grelhado',   acomp: 'Arroz, feijão, salada mista, suco de tamarindo',          nut: '680 kcal · Proteínas: 42g' },
-      { dia: 'Terça-feira',   prato: 'Peixe assado',      acomp: 'Macaxeira cozida, salada de repolho, suco de acerola',     nut: '620 kcal · Ômega-3 alto' },
-      { dia: 'Quarta-feira',  prato: 'Carne de sol',      acomp: 'Arroz, feijão verde, farofa, sumo de manga',               nut: '720 kcal · Ferro: alto' },
-      { dia: 'Quinta-feira',  prato: 'Frango ensopado',   acomp: 'Macarrão, salada de tomate, suco de caju',                 nut: '650 kcal · Proteínas: 38g' },
-      { dia: 'Sexta-feira',   prato: 'Feijão com carne',  acomp: 'Arroz, couve refogada, suco de pitanga',                   nut: '600 kcal · Fibras: alto' },
-    ],
-    lanche: [
-      { dia: 'Segunda-feira', prato: 'Pão de forma com margarina', acomp: 'Leite com achocolatado', nut: '320 kcal' },
-      { dia: 'Terça-feira',   prato: 'Tapioca',                    acomp: 'Suco de maracujá',        nut: '280 kcal' },
-      { dia: 'Quarta-feira',  prato: 'Mingau de aveia',            acomp: 'Fruta da estação',         nut: '300 kcal' },
-      { dia: 'Quinta-feira',  prato: 'Biscoito integral',          acomp: 'Iogurte natural',          nut: '260 kcal' },
-      { dia: 'Sexta-feira',   prato: 'Bolo de fubá',               acomp: 'Suco de goiaba',           nut: '350 kcal' },
-    ],
-  },
   interclasse: {
     times: [
       { nome: 'Tubarões 2ºA', pts: 12, v: 4, e: 0, d: 0, gf: 18, gc: 4  },
@@ -69,7 +53,6 @@ export type Livro     = (typeof store.livros)[number];
 export type Time      = (typeof store.interclasse.times)[number];
 export type Jogo      = (typeof store.interclasse.jogos)[number];
 export type Atleta    = (typeof store.interclasse.atletas)[number];
-export type MenuItem  = (typeof store.cardapio.almoco)[number];
 
 export function fmtDate(iso: string) {
   const [, m, d] = iso.split('-');
