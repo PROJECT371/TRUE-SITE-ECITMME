@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { cadastrar, entrar } from "@/lib/auth";
+import { cadastrar, entrar, type Cargo } from "@/lib/auth";
 import { disciplinas } from "@/data/store";
 
 interface Props {
@@ -8,11 +8,18 @@ interface Props {
   onToast: (msg: string) => void;
 }
 
+const CARGOS: Array<{ id: Cargo; label: string }> = [
+  { id: 'professor', label: 'Professor(a)' },
+  { id: 'secretario_pedagogico', label: 'Secretário(a) Pedagógico(a)' },
+  { id: 'secretario_administrativo', label: 'Secretário(a) Administrativo(a)' },
+];
+
 export default function AuthModal({ onClose, onLogged, onToast }: Props) {
   const [modo, setModo] = useState<'login' | 'cadastro'>('login');
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [role, setRole] = useState<Cargo>('professor');
   const [disciplina, setDisciplina] = useState(disciplinas[0]?.nome || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -24,7 +31,7 @@ export default function AuthModal({ onClose, onLogged, onToast }: Props) {
     try {
       if (modo === 'cadastro') {
         if (!nome) { setError('Informe seu nome.'); setLoading(false); return; }
-        const uid = await cadastrar(nome, email, senha, disciplina);
+        const uid = await cadastrar(nome, email, senha, role, disciplina);
         onToast('✅ Conta criada com sucesso!');
         onLogged(uid);
         onClose();
@@ -47,7 +54,7 @@ export default function AuthModal({ onClose, onLogged, onToast }: Props) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>{modo === 'login' ? 'Entrar' : 'Criar conta de professor(a)'}</h3>
+          <h3>{modo === 'login' ? 'Entrar' : 'Criar conta'}</h3>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
         <div className="modal-body">
@@ -59,23 +66,31 @@ export default function AuthModal({ onClose, onLogged, onToast }: Props) {
           {modo === 'cadastro' && (
             <>
               <div className="form-group">
+                <label>Cargo</label>
+                <select value={role} onChange={e => setRole(e.target.value as Cargo)}>
+                  {CARGOS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Nome completo</label>
                 <input type="text" placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)} />
               </div>
-              <div className="form-group">
-                <label>Disciplina que você leciona</label>
-                <select value={disciplina} onChange={e => setDisciplina(e.target.value)}>
-                  <optgroup label="Base Comum">
-                    {disciplinas.filter(d => d.categoria === 'comum').map(d => <option key={d.nome} value={d.nome}>{d.nome}</option>)}
-                  </optgroup>
-                  <optgroup label="Base Técnica">
-                    {disciplinas.filter(d => d.categoria === 'tecnica').map(d => <option key={d.nome} value={d.nome}>{d.nome}</option>)}
-                  </optgroup>
-                  <optgroup label="Parte Diversificada">
-                    {disciplinas.filter(d => d.categoria === 'diversificada').map(d => <option key={d.nome} value={d.nome}>{d.nome}</option>)}
-                  </optgroup>
-                </select>
-              </div>
+              {role === 'professor' && (
+                <div className="form-group">
+                  <label>Disciplina que você leciona</label>
+                  <select value={disciplina} onChange={e => setDisciplina(e.target.value)}>
+                    <optgroup label="Base Comum">
+                      {disciplinas.filter(d => d.categoria === 'comum').map(d => <option key={d.nome} value={d.nome}>{d.nome}</option>)}
+                    </optgroup>
+                    <optgroup label="Base Técnica">
+                      {disciplinas.filter(d => d.categoria === 'tecnica').map(d => <option key={d.nome} value={d.nome}>{d.nome}</option>)}
+                    </optgroup>
+                    <optgroup label="Parte Diversificada">
+                      {disciplinas.filter(d => d.categoria === 'diversificada').map(d => <option key={d.nome} value={d.nome}>{d.nome}</option>)}
+                    </optgroup>
+                  </select>
+                </div>
+              )}
             </>
           )}
 
