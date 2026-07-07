@@ -140,7 +140,11 @@ export async function removerSolicitacao(id: string) {
 export type AvisoSalaDB = {
   id: string;
   sala_id: string;
+  tipo: 'aviso' | 'pdf' | 'video';
   texto: string;
+  url: string | null;
+  professor_id: string | null;
+  professor_nome: string | null;
   created_at?: string;
 };
 
@@ -150,9 +154,28 @@ export async function listarAvisosSalas(): Promise<AvisoSalaDB[]> {
   return data as AvisoSalaDB[];
 }
 
-export async function criarAvisoSala(salaId: string, texto: string) {
-  const { error } = await db.from('avisos_salas').insert({ sala_id: salaId, texto });
+export async function criarAvisoSala(
+  salaId: string,
+  texto: string,
+  extra?: { tipo?: 'aviso' | 'pdf' | 'video'; url?: string; professorId?: string; professorNome?: string }
+) {
+  const { error } = await db.from('avisos_salas').insert({
+    sala_id: salaId,
+    texto,
+    tipo: extra?.tipo || 'aviso',
+    url: extra?.url || null,
+    professor_id: extra?.professorId || null,
+    professor_nome: extra?.professorNome || null,
+  });
   if (error) throw error;
+}
+
+export async function uploadMaterialSala(salaId: string, arquivo: File): Promise<string> {
+  const caminho = `salas/${salaId}/${Date.now()}-${arquivo.name}`;
+  const { error } = await db.storage.from('materiais').upload(caminho, arquivo);
+  if (error) throw error;
+  const { data } = db.storage.from('materiais').getPublicUrl(caminho);
+  return data.publicUrl;
 }
 
 export async function removerAvisoSala(id: string) {
