@@ -128,6 +128,49 @@ export default function Inicio({ onNavigate }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Corpo Diretivo */}
+      <h2 style={{ fontFamily: 'var(--font-h)', fontSize: '1.4rem', color: 'var(--navy)', margin: '2rem 0 1.2rem' }}>
+        🏛️ Corpo Diretivo
+      </h2>
+      <div className="grid-2">
+        <div className="p-card">
+          <div className="p-card-header">
+            <div className="p-card-icon navy">🎓</div>
+            <div>
+              <div className="p-card-title">Orlando Santos</div>
+              <div className="p-card-sub">Diretor</div>
+            </div>
+          </div>
+        </div>
+        <div className="p-card">
+          <div className="p-card-header">
+            <div className="p-card-icon gold">📘</div>
+            <div>
+              <div className="p-card-title">Glicéria Tavares</div>
+              <div className="p-card-sub">Coordenação Pedagógica</div>
+            </div>
+          </div>
+        </div>
+        <div className="p-card">
+          <div className="p-card-header">
+            <div className="p-card-icon teal">💼</div>
+            <div>
+              <div className="p-card-title">Juliene Luna</div>
+              <div className="p-card-sub">Coordenadora Administrativo-Financeira</div>
+            </div>
+          </div>
+        </div>
+        <div className="p-card">
+          <div className="p-card-header">
+            <div className="p-card-icon navy">📢</div>
+            <div>
+              <div className="p-card-title">Michelly Dornelas</div>
+              <div className="p-card-sub">Secretaria Escolar</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
