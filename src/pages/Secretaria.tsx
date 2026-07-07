@@ -25,7 +25,10 @@ export default function Secretaria({ perfil, onToast }: Props) {
 
   const ehPedagogico = perfil?.role === 'secretario_pedagogico';
   const ehAdministrativo = perfil?.role === 'secretario_administrativo';
+  const ehAluno = perfil?.role === 'aluno';
   const podePostar = ehPedagogico || ehAdministrativo;
+
+  const minhasSolicitacoes = ehAluno ? solicitacoes.filter(s => s.aluno_nome === perfil?.nome) : [];
 
   const catsPermitidas = ehAdministrativo
     ? [{ id: 'matricula', label: 'Matrícula' }, { id: 'documentos', label: 'Documentos' }]
@@ -71,7 +74,7 @@ export default function Secretaria({ perfil, onToast }: Props) {
 
   async function solicitar(tipo: string) {
     try {
-      await criarSolicitacao(tipo);
+      await criarSolicitacao(tipo, ehAluno ? perfil?.nome : undefined);
       await carregar();
       onToast(`✅ Solicitação de "${tipo}" enviada!`);
     } catch {
@@ -177,11 +180,14 @@ export default function Secretaria({ perfil, onToast }: Props) {
                   <p style={{ fontSize: '.82rem', color: '#9ca3af' }}>Nenhuma solicitação recebida.</p>
                 ) : solicitacoes.map(s => (
                   <div key={s.id} style={{ padding: '.7rem 0', borderBottom: '1px dashed var(--p-border)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.5rem', gap: '.6rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.3rem', gap: '.6rem' }}>
                       <div style={{ fontWeight: 600, fontSize: '.86rem', color: 'var(--navy)' }}>{s.tipo}</div>
                       <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626' }} onClick={() => excluirSolicitacao(s.id, s.tipo)}>
                         Excluir
                       </button>
+                    </div>
+                    <div style={{ fontSize: '.75rem', color: '#9ca3af', marginBottom: '.5rem' }}>
+                      {s.aluno_nome ? `👤 ${s.aluno_nome}` : '👤 Visitante (sem login)'}
                     </div>
                     <select
                       value={s.status}
@@ -196,6 +202,26 @@ export default function Secretaria({ perfil, onToast }: Props) {
                 ))}
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Minhas solicitações (aluno logado) */}
+      {ehAluno && (
+        <div className="p-card" style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--gold)' }}>
+          <div className="p-card-header">
+            <div className="p-card-icon gold">👤</div>
+            <div className="p-card-title">Minhas Solicitações</div>
+          </div>
+          <div className="p-card-body">
+            {minhasSolicitacoes.length === 0 ? (
+              <p style={{ fontSize: '.85rem', color: '#9ca3af' }}>Você ainda não fez nenhuma solicitação.</p>
+            ) : minhasSolicitacoes.map(s => (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '.6rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+                <div style={{ fontWeight: 600, fontSize: '.88rem', color: 'var(--navy)' }}>{s.tipo}</div>
+                {statusPill(s.status)}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -269,3 +295,4 @@ export default function Secretaria({ perfil, onToast }: Props) {
     </div>
   );
 }
+
