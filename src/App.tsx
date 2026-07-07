@@ -13,6 +13,9 @@ import Eventos from "@/pages/Eventos";
 import Admin from "@/pages/Admin";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineScreen from "@/components/OfflineScreen";
+import AuthModal from "@/components/AuthModal";
+import { db } from "@/lib/supabase";
+import { sair, buscarPerfil, type Perfil } from "@/lib/auth";
 
 type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'cardapio' | 'interclasse' | 'eventos' | 'admin';
 
@@ -40,6 +43,21 @@ export default function App() {
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     try { return localStorage.getItem('ecit_theme') === 'dark'; } catch { return false; }
   });
+  const [showAuth, setShowAuth] = useState(false);
+  const [perfil, setPerfil] = useState<Perfil | null>(null);
+
+  useEffect(() => {
+    db.auth.getSession().then(({ data }) => {
+      const uid = data.session?.user?.id;
+      if (uid) buscarPerfil(uid).then(setPerfil);
+    });
+    const { data: sub } = db.auth.onAuthStateChange((_event, session) => {
+      const uid = session?.user?.id;
+      if (uid) buscarPerfil(uid).then(setPerfil);
+      else setPerfil(null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -111,6 +129,24 @@ export default function App() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
+            {perfil ? (
+              <button
+                className="btn-admin"
+                style={{ background: 'rgba(255,255,255,.1)', color: 'var(--white)', boxShadow: 'none', marginRight: '.6rem' }}
+                onClick={async () => { await sair(); setPerfil(null); showToast('👋 Você saiu.'); }}
+                title="Sair"
+              >
+                {perfil.role === 'professor' ? '👩‍🏫' : '🎓'} {perfil.nome.split(' ')[0]} · Sair
+              </button>
+            ) : (
+              <button
+                className="btn-admin"
+                style={{ background: 'rgba(255,255,255,.1)', color: 'var(--white)', boxShadow: 'none', marginRight: '.6rem' }}
+                onClick={() => setShowAuth(true)}
+              >
+                👤 Entrar
+              </button>
+            )}
             <button
               className="btn-admin"
               style={{ background: 'rgba(255,255,255,.1)', color: 'var(--white)', boxShadow: 'none', marginRight: '.6rem' }}
@@ -145,7 +181,7 @@ export default function App() {
       {/* Main */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2.5rem 1.5rem', minHeight: '70vh' }}>
         {section === 'inicio'      && <Inicio onNavigate={navigate} />}
-        {section === 'disciplinas' && <Disciplinas />}
+        {section === 'disciplinas' && <Disciplinas perfil={perfil} onToast={showToast} />}
         {section === 'biblioteca'  && <Biblioteca onToast={showToast} />}
         {section === 'provas'      && <Provas />}
         {section === 'conteudos'   && <Conteudos />}
@@ -167,6 +203,15 @@ export default function App() {
 
       {/* PWA install prompt */}
       <InstallPrompt />
+
+      {/* Login / Cadastro */}
+      {showAuth && (
+        <AuthModal
+          onClose={() => setShowAuth(false)}
+          onLogged={(uid) => buscarPerfil(uid).then(setPerfil)}
+          onToast={showToast}
+        />
+      )}
 
       {/* Toasts */}
       <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 2000, display: 'flex', flexDirection: 'column', gap: '.6rem' }}>
