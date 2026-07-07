@@ -134,6 +134,7 @@ export function turmaNome(t: string) {
 /* ================= Disciplinas ================= */
 export type Disciplina = {
   nome: string;
+  categoria: 'comum' | 'tecnica' | 'diversificada';
   professor: string;
   horario: string;
   cor: string;
@@ -141,15 +142,35 @@ export type Disciplina = {
   atividades: string[];
 };
 
+const SEM_INFO = 'A definir';
+
 export let disciplinas: Disciplina[] = [
-  { nome: 'Matemática', professor: 'Profª. Ana Beatriz', horario: 'Seg/Qua 07h30', cor: '#c9993a',
-    conteudo: ['Funções do 2º grau', 'Geometria analítica'], atividades: ['Trabalho — 08/07', 'Prova — 15/07'] },
-  { nome: 'Português', professor: 'Prof. Ricardo Melo', horario: 'Ter/Qui 08h20', cor: '#7c3aed',
-    conteudo: ['Figuras de linguagem', 'Redação dissertativa'], atividades: ['Redação — 10/07'] },
-  { nome: 'Biologia', professor: 'Profª. Camila Rocha', horario: 'Seg/Sex 09h10', cor: '#2e7d52',
-    conteudo: ['Genética', 'Ecologia'], atividades: ['Relatório — 12/07'] },
-  { nome: 'História', professor: 'Prof. Diego Farias', horario: 'Qua/Sex 10h00', cor: '#1e6fa0',
-    conteudo: ['Brasil Colônia', 'Revolução Industrial'], atividades: ['Seminário — 18/07'] },
+  // Base Comum
+  { nome: 'Arte', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#c9993a', conteudo: [], atividades: [] },
+  { nome: 'Biologia', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#2e7d52', conteudo: [], atividades: [] },
+  { nome: 'Educação Física', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#dc2626', conteudo: [], atividades: [] },
+  { nome: 'Filosofia', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#7c3aed', conteudo: [], atividades: [] },
+  { nome: 'Física', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#1e6fa0', conteudo: [], atividades: [] },
+  { nome: 'Geografia', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#0d9488', conteudo: [], atividades: [] },
+  { nome: 'História', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#b45309', conteudo: [], atividades: [] },
+  { nome: 'Língua Portuguesa', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#be185d', conteudo: [], atividades: [] },
+  { nome: 'Língua Espanhola', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#ea580c', conteudo: [], atividades: [] },
+  { nome: 'Língua Inglesa', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#0284c7', conteudo: [], atividades: [] },
+  { nome: 'Matemática', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#4338ca', conteudo: [], atividades: [] },
+  { nome: 'Química', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#65a30d', conteudo: [], atividades: [] },
+  { nome: 'Sociologia', categoria: 'comum', professor: SEM_INFO, horario: SEM_INFO, cor: '#9333ea', conteudo: [], atividades: [] },
+
+  // Base Técnica
+  { nome: 'Arquitetura de Hardware', categoria: 'tecnica', professor: SEM_INFO, horario: SEM_INFO, cor: '#0f3e9e', conteudo: [], atividades: [] },
+  { nome: 'Sistemas Operacionais', categoria: 'tecnica', professor: SEM_INFO, horario: SEM_INFO, cor: '#0f766e', conteudo: [], atividades: [] },
+  { nome: 'Introdução à Informática', categoria: 'tecnica', professor: SEM_INFO, horario: SEM_INFO, cor: '#1d4ed8', conteudo: [], atividades: [] },
+  { nome: 'Lógica de Programação', categoria: 'tecnica', professor: SEM_INFO, horario: SEM_INFO, cor: '#7e22ce', conteudo: [], atividades: [] },
+
+  // Parte Diversificada
+  { nome: 'Produção de Texto', categoria: 'diversificada', professor: SEM_INFO, horario: SEM_INFO, cor: '#c2410c', conteudo: [], atividades: [] },
+  { nome: 'Práticas Integradoras I', categoria: 'diversificada', professor: SEM_INFO, horario: SEM_INFO, cor: '#b91c1c', conteudo: [], atividades: [] },
+  { nome: 'Práticas Integradoras II', categoria: 'diversificada', professor: SEM_INFO, horario: SEM_INFO, cor: '#a16207', conteudo: [], atividades: [] },
+  { nome: 'Recomposição da Aprendizagem Matemática e Língua Portuguesa', categoria: 'diversificada', professor: SEM_INFO, horario: SEM_INFO, cor: '#15803d', conteudo: [], atividades: [] },
 ];
 
 export function addDisciplina(d: Disciplina) { disciplinas.push(d); }
