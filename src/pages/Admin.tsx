@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { store, disciplinas, addDisciplina, removeDisciplina, solicitacoes, updateSolicitacaoStatus, removeSolicitacao, CURSOS, ANOS, TURMAS, salaId } from "@/data/store";
+import { store, disciplinas, addDisciplina, removeDisciplina, CURSOS, ANOS, TURMAS, salaId } from "@/data/store";
 import {
   listarEventos, criarEvento, removerEvento, type EventoDB,
   listarProvas, criarProva, removerProva, type ProvaDB,
   listarAvisos, criarAviso, removerAviso, type AvisoDB,
   listarClubes, criarClube, removerClube, type ClubeDB,
   listarAvisosSalas, criarAvisoSala, removerAvisoSala, type AvisoSalaDB,
+  listarSolicitacoes, atualizarStatusSolicitacao, removerSolicitacao, type SolicitacaoDB,
 } from "@/lib/dados";
 
 interface Props {
@@ -27,6 +28,7 @@ export default function Admin({ onToast }: Props) {
   const [avisosList, setAvisosList] = useState<AvisoDB[]>([]);
   const [clubesList, setClubesList] = useState<ClubeDB[]>([]);
   const [avisosSalasList, setAvisosSalasList] = useState<AvisoSalaDB[]>([]);
+  const [solicitacoesList, setSolicitacoesList] = useState<SolicitacaoDB[]>([]);
 
   useEffect(() => {
     listarEventos().then(setEventosList);
@@ -34,6 +36,7 @@ export default function Admin({ onToast }: Props) {
     listarAvisos().then(setAvisosList);
     listarClubes().then(setClubesList);
     listarAvisosSalas().then(setAvisosSalasList);
+    listarSolicitacoes().then(setSolicitacoesList);
   }, []);
 
   // Eventos form
@@ -254,16 +257,24 @@ export default function Admin({ onToast }: Props) {
     }
   }
 
-  function setStatusSolic(id: number, status: 'em análise' | 'aprovado' | 'finalizado') {
-    updateSolicitacaoStatus(id, status);
-    forceUpdate(n => n + 1);
-    onToast('✅ Status atualizado.');
+  async function setStatusSolic(id: string, status: 'em análise' | 'aprovado' | 'finalizado') {
+    try {
+      await atualizarStatusSolicitacao(id, status);
+      setSolicitacoesList(await listarSolicitacoes());
+      onToast('✅ Status atualizado.');
+    } catch {
+      onToast('❌ Não foi possível atualizar.');
+    }
   }
-  function delSolic(id: number, tipo: string) {
+  async function delSolic(id: string, tipo: string) {
     if (!window.confirm(`Excluir a solicitação "${tipo}"?`)) return;
-    removeSolicitacao(id);
-    forceUpdate(n => n + 1);
-    onToast('🗑️ Solicitação removida.');
+    try {
+      await removerSolicitacao(id);
+      setSolicitacoesList(await listarSolicitacoes());
+      onToast('🗑️ Solicitação removida.');
+    } catch {
+      onToast('❌ Não foi possível remover.');
+    }
   }
 
   async function addAvisoSalaForm() {
@@ -646,16 +657,15 @@ export default function Admin({ onToast }: Props) {
       {adminTab === 'solicitacoes' && (
         <div className="admin-form">
           <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
-            Solicitações da Secretaria ({solicitacoes.length})
+            Solicitações da Secretaria ({solicitacoesList.length})
           </h3>
-          {solicitacoes.length === 0 ? (
+          {solicitacoesList.length === 0 ? (
             <div className="empty"><div className="empty-icon">📭</div><p>Nenhuma solicitação recebida</p></div>
-          ) : solicitacoes.map(s => (
+          ) : solicitacoesList.map(s => (
             <div key={s.id} style={{ padding: '.8rem 0', borderBottom: '1px dashed var(--p-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.5rem', gap: '.6rem' }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '.88rem', color: 'var(--navy)' }}>{s.tipo}</div>
-                  <div style={{ fontSize: '.72rem', color: '#9ca3af' }}>Solicitado em {s.data}</div>
                 </div>
                 <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delSolic(s.id, s.tipo)}>
                   Excluir
