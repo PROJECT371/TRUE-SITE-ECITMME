@@ -73,13 +73,6 @@ export default function Admin({ onToast }: Props) {
   const [ctProf, setCtProf] = useState('');
   const [ctConteudo, setCtConteudo] = useState('');
 
-  // Cardapio form
-  const [cdDia, setCdDia] = useState('Segunda-feira');
-  const [cdTipo, setCdTipo] = useState<'almoco' | 'lanche'>('almoco');
-  const [cdPrato, setCdPrato] = useState('');
-  const [cdAcomp, setCdAcomp] = useState('');
-  const [cdNut, setCdNut] = useState('');
-
   // Jogos form
   const [jgA, setJgA] = useState('');
   const [jgB, setJgB] = useState('');
@@ -205,16 +198,6 @@ export default function Admin({ onToast }: Props) {
     store.conteudos.push({ disc: ctDisc, serie: ctSerie, bim: ctBim, prof: ctProf, conteudo: ctConteudo });
     setCtDisc(''); setCtProf(''); setCtConteudo('');
     onToast('✅ Conteúdo publicado com sucesso!');
-  }
-
-  function addCardapio() {
-    if (!cdPrato || !cdAcomp) { onToast('⚠️ Preencha todos os campos obrigatórios'); return; }
-    const idx = store.cardapio[cdTipo].findIndex(c => c.dia === cdDia);
-    const item = { dia: cdDia, prato: cdPrato, acomp: cdAcomp, nut: cdNut || '–' };
-    if (idx >= 0) store.cardapio[cdTipo][idx] = item;
-    else store.cardapio[cdTipo].push(item);
-    setCdPrato(''); setCdAcomp(''); setCdNut('');
-    onToast('✅ Cardápio atualizado com sucesso!');
   }
 
   function addJogo() {
@@ -352,7 +335,6 @@ export default function Admin({ onToast }: Props) {
     { id: 'solicitacoes', label: '📝 Solicitações' },
     { id: 'clubes',     label: '🎭 Clubes' },
     { id: 'salas',      label: '🏫 Salas' },
-    { id: 'cardapio',   label: '🍽️ Cardápio' },
     { id: 'jogos',      label: '🏆 Interclasse' },
     { id: 'livros',     label: '📚 Biblioteca' },
   ];
@@ -656,30 +638,6 @@ export default function Admin({ onToast }: Props) {
         </div>
       )}
 
-      {/* ── CARDÁPIO ── */}
-      {adminTab === 'cardapio' && (
-        <div className="admin-form">
-          <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Atualizar Cardápio</h3>
-          <div className="grid-2">
-            <div className="form-group"><label>Dia da Semana</label>
-              <select value={cdDia} onChange={e => setCdDia(e.target.value)}>
-                <option>Segunda-feira</option><option>Terça-feira</option>
-                <option>Quarta-feira</option><option>Quinta-feira</option><option>Sexta-feira</option>
-              </select>
-            </div>
-            <div className="form-group"><label>Tipo</label>
-              <select value={cdTipo} onChange={e => setCdTipo(e.target.value as 'almoco' | 'lanche')}>
-                <option value="almoco">Almoço</option><option value="lanche">Lanche</option>
-              </select>
-            </div>
-          </div>
-          <div className="form-group"><label>Prato Principal</label><input type="text" placeholder="Ex: Frango grelhado com arroz e feijão" value={cdPrato} onChange={e => setCdPrato(e.target.value)} /></div>
-          <div className="form-group"><label>Acompanhamentos</label><input type="text" placeholder="Ex: Salada de tomate, suco de laranja" value={cdAcomp} onChange={e => setCdAcomp(e.target.value)} /></div>
-          <div className="form-group"><label>Informação Nutricional</label><input type="text" placeholder="Ex: 650 kcal · Rico em proteínas" value={cdNut} onChange={e => setCdNut(e.target.value)} /></div>
-          <button className="p-btn p-btn-gold" onClick={addCardapio}>+ Atualizar Cardápio</button>
-        </div>
-      )}
-
       {/* ── JOGOS ── */}
       {adminTab === 'jogos' && (
         <div className="admin-form">
@@ -886,4 +844,3 @@ export default function Admin({ onToast }: Props) {
     </div>
   );
 }
-

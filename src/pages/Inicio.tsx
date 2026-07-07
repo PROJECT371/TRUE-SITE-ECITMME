@@ -18,14 +18,11 @@ export default function Inicio({ onNavigate }: Props) {
   }, []);
 
   const today = new Date();
-  const dayNames = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
-  const todayName = dayNames[today.getDay()];
 
   const upcoming = provas
     .filter(p => new Date(p.data) >= today)
     .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())[0];
   const lastAviso = avisos[0];
-  const todayMenu = store.cardapio.almoco.find(c => c.dia === todayName) || store.cardapio.almoco[0];
   const nextGame = store.interclasse.jogos.find(j => new Date(j.data) >= today) || store.interclasse.jogos[0];
   const upcoming3 = provas
     .filter(p => new Date(p.data) >= today)
@@ -57,11 +54,6 @@ export default function Inicio({ onNavigate }: Props) {
           <div className="hc-label">🔔 Último Aviso</div>
           <div className="hc-value">{lastAviso ? lastAviso.titulo : 'Sem avisos'}</div>
           <div className="hc-sub">{lastAviso ? fmtDate(lastAviso.data) : '–'}</div>
-        </div>
-        <div className="highlight-card hc-green">
-          <div className="hc-label">🍽️ Cardápio Hoje ({todayName})</div>
-          <div className="hc-value">{todayMenu.prato}</div>
-          <div className="hc-sub">{todayMenu.acomp.split(',').slice(0, 2).join(', ')}</div>
         </div>
         <div className="highlight-card hc-teal">
           <div className="hc-label">🏆 Próximo Jogo</div>
