@@ -185,7 +185,7 @@ export default function App() {
         {section === 'biblioteca'  && <Biblioteca onToast={showToast} />}
         {section === 'provas'      && <Provas />}
         {section === 'conteudos'   && <Conteudos />}
-        {section === 'secretaria'  && <Secretaria onToast={showToast} />}
+        {section === 'secretaria'  && <Secretaria perfil={perfil} onToast={showToast} />}
         {section === 'clubes'      && <Clubes />}
         {section === 'salas'       && <Salas />}
         {section === 'cardapio'    && <Cardapio />}
