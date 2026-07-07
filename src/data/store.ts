@@ -1,19 +1,4 @@
 export const store = {
-  provas: [
-    { disc: 'Matemática',  turma: '1a', data: '2025-06-10', hora: '07:30', tipo: 'Prova Bimestral', obs: 'Funções e gráficos' },
-    { disc: 'Português',   turma: '2a', data: '2025-06-11', hora: '09:00', tipo: 'Prova Mensal',    obs: 'Interpretação textual' },
-    { disc: 'Química',     turma: '3a', data: '2025-06-13', hora: '07:30', tipo: 'Prova Bimestral', obs: 'Equilíbrio químico' },
-    { disc: 'História',    turma: '1a', data: '2025-06-17', hora: '09:00', tipo: 'Prova Mensal',    obs: 'Brasil colonial' },
-    { disc: 'Biologia',    turma: '2a', data: '2025-06-18', hora: '07:30', tipo: 'Trabalho',        obs: 'Genética e hereditariedade' },
-    { disc: 'Física',      turma: '3a', data: '2025-06-20', hora: '09:00', tipo: 'Prova Bimestral', obs: 'Eletromagnetismo' },
-    { disc: 'Inglês',      turma: '1a', data: '2025-06-24', hora: '11:00', tipo: 'Seminário',       obs: 'Oral presentation' },
-  ],
-  avisos: [
-    { titulo: 'Reunião de Pais e Mestres', cat: 'comunicados', desc: 'Realizada no dia 15/06 às 14h no auditório da escola. Presença obrigatória.', data: '2025-06-03', prioridade: 'urgente' },
-    { titulo: 'Matrículas 2026 abertas',   cat: 'matricula',   desc: 'Documentos necessários: certidão de nascimento, comprovante de residência e histórico escolar.', data: '2025-06-01', prioridade: 'info' },
-    { titulo: 'Entrega de boletins',       cat: 'documentos',  desc: 'Os boletins do 1º bimestre serão entregues na sexta-feira às 12h.', data: '2025-05-30', prioridade: 'normal' },
-    { titulo: 'Passeio cultural',          cat: 'pais',        desc: 'Visita ao museu de Mamanguape no dia 25/06. Autorização até 20/06.', data: '2025-05-28', prioridade: 'normal' },
-  ],
   conteudos: [
     { disc: 'Matemática', serie: '1a', bim: '1º Bimestre', prof: 'Prof. Carlos',   conteudo: 'Conjuntos, Funções, Domínio e Imagem, Função linear' },
     { disc: 'Português',  serie: '1a', bim: '1º Bimestre', prof: 'Profª. Ana',     conteudo: 'Interpretação textual, Ortografia, Figuras de linguagem' },
@@ -79,39 +64,6 @@ export const store = {
   ],
 };
 
-export type Evento = {
-  id: number;
-  titulo: string;
-  data: string;
-  hora: string;
-  local: string;
-  cat: string;
-  desc: string;
-  cor: string;
-};
-
-let _eventoId = 5;
-
-export const eventos: Evento[] = [
-  { id: 1, titulo: 'Festa Junina ECIT 2025',        data: '2025-06-28', hora: '08:00', local: 'Pátio central',     cat: 'cultural',   desc: 'Festa tradicional com quadrilha, comidas típicas, apresentações musicais e brincadeiras para toda a comunidade escolar.', cor: '#e8b84b' },
-  { id: 2, titulo: 'Feira de Ciências',              data: '2025-07-10', hora: '08:00', local: 'Ginásio',           cat: 'academico',  desc: 'Exposição dos projetos científicos desenvolvidos pelos alunos durante o 1º semestre. Abertura para a comunidade.', cor: '#2e7d52' },
-  { id: 3, titulo: 'Semana do Meio Ambiente',        data: '2025-06-16', hora: '07:30', local: 'Sala de aula',      cat: 'social',     desc: 'Semana de atividades sobre sustentabilidade, reciclagem e preservação ambiental com palestras e atividades práticas.', cor: '#1e6fa0' },
-  { id: 4, titulo: 'Reunião de Pais e Mestres',      data: '2025-06-15', hora: '14:00', local: 'Auditório',         cat: 'reuniao',    desc: 'Reunião bimestral para entrega de boletins e discussão sobre o desempenho dos alunos. Presença obrigatória.', cor: '#c9993a' },
-  { id: 5, titulo: 'Encerramento do Interclasse',   data: '2025-07-05', hora: '08:00', local: 'Quadra principal',  cat: 'esporte',    desc: 'Finais do Interclasse 2025 com premiação dos campeões e apresentações culturais.', cor: '#7c3aed' },
-];
-
-export function addEvento(e: Omit<Evento, 'id'>) {
-  _eventoId++;
-  eventos.push({ ...e, id: _eventoId });
-}
-
-export function removeEvento(id: number) {
-  const idx = eventos.findIndex(e => e.id === id);
-  if (idx >= 0) eventos.splice(idx, 1);
-}
-
-export type Prova     = (typeof store.provas)[number];
-export type Aviso     = (typeof store.avisos)[number];
 export type Conteudo  = (typeof store.conteudos)[number];
 export type Livro     = (typeof store.livros)[number];
 export type Time      = (typeof store.interclasse.times)[number];
@@ -176,24 +128,6 @@ export let disciplinas: Disciplina[] = [
 export function addDisciplina(d: Disciplina) { disciplinas.push(d); }
 export function removeDisciplina(i: number) { disciplinas.splice(i, 1); }
 
-/* ================= Clubes ================= */
-export type Clube = {
-  nome: string;
-  professor: string;
-  horario: string;
-  integrantes: number;
-};
-
-export let clubes: Clube[] = [
-  { nome: 'Clube de Robótica', professor: 'Prof. Marcos Vinícius', horario: 'Qui 14h', integrantes: 18 },
-  { nome: 'Grêmio Estudantil', professor: 'Profª. Camila Rocha', horario: 'Seg 15h', integrantes: 24 },
-  { nome: 'Clube de Teatro', professor: 'Prof. Ricardo Melo', horario: 'Ter 14h30', integrantes: 15 },
-  { nome: 'Coral ECIT', professor: 'Profª. Juliana Prado', horario: 'Qua 13h', integrantes: 21 },
-];
-
-export function addClube(c: Clube) { clubes.push(c); }
-export function removeClube(i: number) { clubes.splice(i, 1); }
-
 /* ================= Secretaria: solicitações ================= */
 export type Solicitacao = {
   id: number;
@@ -234,16 +168,5 @@ export const TURMAS = ['A', 'B'];
 
 export function salaId(cursoSlug: string, ano: number, turma: string) {
   return `${cursoSlug}${ano}${turma}`;
-}
-
-export let avisosSalas: Record<string, string[]> = {};
-
-export function addAvisoSala(id: string, texto: string) {
-  if (!avisosSalas[id]) avisosSalas[id] = [];
-  avisosSalas[id].unshift(texto);
-}
-
-export function removeAvisoSala(id: string, i: number) {
-  avisosSalas[id]?.splice(i, 1);
 }
 
