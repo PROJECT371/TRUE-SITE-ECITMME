@@ -106,6 +106,35 @@ export async function removerClube(id: string) {
   if (error) throw error;
 }
 
+/* ================= Solicitações (Secretaria) ================= */
+export type SolicitacaoDB = {
+  id: string;
+  tipo: string;
+  status: 'em análise' | 'aprovado' | 'finalizado';
+  created_at?: string;
+};
+
+export async function listarSolicitacoes(): Promise<SolicitacaoDB[]> {
+  const { data, error } = await db.from('solicitacoes').select('*').order('created_at', { ascending: false });
+  if (error || !data) return [];
+  return data as SolicitacaoDB[];
+}
+
+export async function criarSolicitacao(tipo: string) {
+  const { error } = await db.from('solicitacoes').insert({ tipo });
+  if (error) throw error;
+}
+
+export async function atualizarStatusSolicitacao(id: string, status: SolicitacaoDB['status']) {
+  const { error } = await db.from('solicitacoes').update({ status }).eq('id', id);
+  if (error) throw error;
+}
+
+export async function removerSolicitacao(id: string) {
+  const { error } = await db.from('solicitacoes').delete().eq('id', id);
+  if (error) throw error;
+}
+
 /* ================= Avisos por sala ================= */
 export type AvisoSalaDB = {
   id: string;

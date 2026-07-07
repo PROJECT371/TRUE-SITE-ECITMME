@@ -1,14 +1,16 @@
 import { db } from "@/lib/supabase";
 
+export type Cargo = 'professor' | 'secretario_pedagogico' | 'secretario_administrativo';
+
 export type Perfil = {
   id: string;
   nome: string;
-  role: 'professor';
+  role: Cargo;
   disciplina: string | null;
   turma: string | null;
 };
 
-export async function cadastrar(nome: string, email: string, senha: string, disciplina: string) {
+export async function cadastrar(nome: string, email: string, senha: string, role: Cargo, disciplina: string) {
   const { data, error } = await db.auth.signUp({ email, password: senha });
   if (error) throw error;
   const uid = data.user?.id;
@@ -17,8 +19,8 @@ export async function cadastrar(nome: string, email: string, senha: string, disc
   const { error: perr } = await db.from('profiles').insert({
     id: uid,
     nome,
-    role: 'professor',
-    disciplina,
+    role,
+    disciplina: role === 'professor' ? disciplina : null,
   });
   if (perr) throw perr;
   return uid;
