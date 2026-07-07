@@ -1,5 +1,12 @@
-import { useState } from "react";
-import { store, eventos, addEvento, removeEvento, disciplinas, addDisciplina, removeDisciplina, clubes, addClube, removeClube, solicitacoes, updateSolicitacaoStatus, removeSolicitacao, CURSOS, ANOS, TURMAS, salaId, avisosSalas, addAvisoSala, removeAvisoSala } from "@/data/store";
+import { useEffect, useState } from "react";
+import { store, disciplinas, addDisciplina, removeDisciplina, solicitacoes, updateSolicitacaoStatus, removeSolicitacao, CURSOS, ANOS, TURMAS, salaId } from "@/data/store";
+import {
+  listarEventos, criarEvento, removerEvento, type EventoDB,
+  listarProvas, criarProva, removerProva, type ProvaDB,
+  listarAvisos, criarAviso, removerAviso, type AvisoDB,
+  listarClubes, criarClube, removerClube, type ClubeDB,
+  listarAvisosSalas, criarAvisoSala, removerAvisoSala, type AvisoSalaDB,
+} from "@/lib/dados";
 
 interface Props {
   onToast: (msg: string) => void;
@@ -12,6 +19,22 @@ export default function Admin({ onToast }: Props) {
   const [pwd, setPwd] = useState('');
   const [adminTab, setAdminTab] = useState('eventos');
   const [error, setError] = useState('');
+  const [, forceUpdate] = useState(0);
+
+  // Dados vindos do Supabase
+  const [eventosList, setEventosList] = useState<EventoDB[]>([]);
+  const [provasList, setProvasList] = useState<ProvaDB[]>([]);
+  const [avisosList, setAvisosList] = useState<AvisoDB[]>([]);
+  const [clubesList, setClubesList] = useState<ClubeDB[]>([]);
+  const [avisosSalasList, setAvisosSalasList] = useState<AvisoSalaDB[]>([]);
+
+  useEffect(() => {
+    listarEventos().then(setEventosList);
+    listarProvas().then(setProvasList);
+    listarAvisos().then(setAvisosList);
+    listarClubes().then(setClubesList);
+    listarAvisosSalas().then(setAvisosSalasList);
+  }, []);
 
   // Eventos form
   const [evTitulo, setEvTitulo] = useState('');
@@ -21,7 +44,6 @@ export default function Admin({ onToast }: Props) {
   const [evCat, setEvCat] = useState('cultural');
   const [evDesc, setEvDesc] = useState('');
   const [evCor, setEvCor] = useState('#c9993a');
-  const [, forceUpdate] = useState(0);
 
   // Avisos form
   const [avTitulo, setAvTitulo] = useState('');
@@ -92,33 +114,73 @@ export default function Admin({ onToast }: Props) {
     else setError('Senha incorreta. Tente novamente.');
   }
 
-  function addEvt() {
+  async function addEvt() {
     if (!evTitulo || !evData || !evHora || !evLocal) { onToast('⚠️ Preencha todos os campos obrigatórios'); return; }
-    addEvento({ titulo: evTitulo, data: evData, hora: evHora, local: evLocal, cat: evCat, desc: evDesc, cor: evCor });
-    setEvTitulo(''); setEvData(''); setEvHora(''); setEvLocal(''); setEvDesc('');
-    forceUpdate(n => n + 1);
-    onToast('✅ Evento publicado com sucesso!');
+    try {
+      await criarEvento({ titulo: evTitulo, data: evData, hora: evHora, local: evLocal, categoria: evCat, descricao: evDesc, cor: evCor });
+      setEventosList(await listarEventos());
+      setEvTitulo(''); setEvData(''); setEvHora(''); setEvLocal(''); setEvDesc('');
+      onToast('✅ Evento publicado com sucesso!');
+    } catch {
+      onToast('❌ Não foi possível publicar o evento.');
+    }
   }
 
-  function delEvt(id: number, titulo: string) {
+  async function delEvt(id: string, titulo: string) {
     if (!window.confirm(`Remover o evento "${titulo}"?`)) return;
-    removeEvento(id);
-    forceUpdate(n => n + 1);
-    onToast('🗑️ Evento removido.');
+    try {
+      await removerEvento(id);
+      setEventosList(await listarEventos());
+      onToast('🗑️ Evento removido.');
+    } catch {
+      onToast('❌ Não foi possível remover.');
+    }
   }
 
-  function addAviso() {
+  async function addAviso() {
     if (!avTitulo || !avDesc) { onToast('⚠️ Preencha todos os campos obrigatórios'); return; }
-    store.avisos.unshift({ titulo: avTitulo, cat: avCat, desc: avDesc, data: avData || new Date().toISOString().split('T')[0], prioridade: avPrio });
-    setAvTitulo(''); setAvDesc(''); setAvData('');
-    onToast('✅ Aviso publicado com sucesso!');
+    try {
+      await criarAviso({ titulo: avTitulo, categoria: avCat, descricao: avDesc, data: avData || new Date().toISOString().split('T')[0], prioridade: avPrio });
+      setAvisosList(await listarAvisos());
+      setAvTitulo(''); setAvDesc(''); setAvData('');
+      onToast('✅ Aviso publicado com sucesso!');
+    } catch {
+      onToast('❌ Não foi possível publicar o aviso.');
+    }
   }
 
-  function addProva() {
+  async function delAviso(id: string, titulo: string) {
+    if (!window.confirm(`Remover o aviso "${titulo}"?`)) return;
+    try {
+      await removerAviso(id);
+      setAvisosList(await listarAvisos());
+      onToast('🗑️ Aviso removido.');
+    } catch {
+      onToast('❌ Não foi possível remover.');
+    }
+  }
+
+  async function addProva() {
     if (!pvDisc || !pvData || !pvHora) { onToast('⚠️ Preencha todos os campos obrigatórios'); return; }
-    store.provas.push({ disc: pvDisc, turma: pvTurma, data: pvData, hora: pvHora, tipo: pvTipo, obs: pvObs });
-    setPvDisc(''); setPvData(''); setPvHora(''); setPvObs('');
-    onToast('✅ Prova cadastrada com sucesso!');
+    try {
+      await criarProva({ disciplina: pvDisc, turma: pvTurma, data: pvData, hora: pvHora, tipo: pvTipo, obs: pvObs });
+      setProvasList(await listarProvas());
+      setPvDisc(''); setPvData(''); setPvHora(''); setPvObs('');
+      onToast('✅ Prova cadastrada com sucesso!');
+    } catch {
+      onToast('❌ Não foi possível cadastrar a prova.');
+    }
+  }
+
+  async function delProva(id: string, disc: string) {
+    if (!window.confirm(`Remover a prova de "${disc}"?`)) return;
+    try {
+      await removerProva(id);
+      setProvasList(await listarProvas());
+      onToast('🗑️ Prova removida.');
+    } catch {
+      onToast('❌ Não foi possível remover.');
+    }
   }
 
   function addConteudo() {
@@ -170,18 +232,26 @@ export default function Admin({ onToast }: Props) {
     onToast('🗑️ Disciplina removida.');
   }
 
-  function addClb() {
+  async function addClb() {
     if (!clNome || !clProf) { onToast('⚠️ Preencha todos os campos obrigatórios'); return; }
-    addClube({ nome: clNome, professor: clProf, horario: clHorario, integrantes: clInteg });
-    setClNome(''); setClProf(''); setClHorario(''); setClInteg(0);
-    forceUpdate(n => n + 1);
-    onToast('✅ Clube cadastrado com sucesso!');
+    try {
+      await criarClube({ nome: clNome, professor: clProf, horario: clHorario, integrantes: clInteg });
+      setClubesList(await listarClubes());
+      setClNome(''); setClProf(''); setClHorario(''); setClInteg(0);
+      onToast('✅ Clube cadastrado com sucesso!');
+    } catch {
+      onToast('❌ Não foi possível cadastrar o clube.');
+    }
   }
-  function delClb(i: number, nome: string) {
+  async function delClb(id: string, nome: string) {
     if (!window.confirm(`Remover o clube "${nome}"?`)) return;
-    removeClube(i);
-    forceUpdate(n => n + 1);
-    onToast('🗑️ Clube removido.');
+    try {
+      await removerClube(id);
+      setClubesList(await listarClubes());
+      onToast('🗑️ Clube removido.');
+    } catch {
+      onToast('❌ Não foi possível remover.');
+    }
   }
 
   function setStatusSolic(id: number, status: 'em análise' | 'aprovado' | 'finalizado') {
@@ -196,16 +266,25 @@ export default function Admin({ onToast }: Props) {
     onToast('🗑️ Solicitação removida.');
   }
 
-  function addAvisoSalaForm() {
+  async function addAvisoSalaForm() {
     if (!slTexto) { onToast('⚠️ Escreva o aviso'); return; }
-    addAvisoSala(salaId(slCurso, slAno, slTurma), slTexto);
-    setSlTexto('');
-    forceUpdate(n => n + 1);
-    onToast('✅ Aviso publicado na turma!');
+    try {
+      await criarAvisoSala(salaId(slCurso, slAno, slTurma), slTexto);
+      setAvisosSalasList(await listarAvisosSalas());
+      setSlTexto('');
+      onToast('✅ Aviso publicado na turma!');
+    } catch {
+      onToast('❌ Não foi possível publicar o aviso.');
+    }
   }
-  function delAvisoSala(id: string, i: number) {
-    removeAvisoSala(id, i);
-    forceUpdate(n => n + 1);
+  async function delAvisoSala(id: string) {
+    try {
+      await removerAvisoSala(id);
+      setAvisosSalasList(await listarAvisosSalas());
+      onToast('🗑️ Aviso removido.');
+    } catch {
+      onToast('❌ Não foi possível remover.');
+    }
   }
 
   const adminTabs = [
@@ -313,14 +392,13 @@ export default function Admin({ onToast }: Props) {
             <button className="p-btn p-btn-gold" onClick={addEvt}>🗓️ Publicar Evento</button>
           </div>
 
-          {/* Lista para gerenciar */}
           <div className="admin-form">
             <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
-              Eventos Cadastrados ({eventos.length})
+              Eventos Cadastrados ({eventosList.length})
             </h3>
-            {eventos.length === 0 ? (
+            {eventosList.length === 0 ? (
               <div className="empty"><div className="empty-icon">🗓️</div><p>Nenhum evento cadastrado</p></div>
-            ) : [...eventos].sort((a,b) => new Date(a.data).getTime() - new Date(b.data).getTime()).map(ev => (
+            ) : eventosList.map(ev => (
               <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.75rem 0', borderBottom: '1px dashed var(--p-border)' }}>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: ev.cor, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -338,58 +416,98 @@ export default function Admin({ onToast }: Props) {
 
       {/* ── AVISOS ── */}
       {adminTab === 'avisos' && (
-        <div className="admin-form">
-          <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Cadastrar Aviso</h3>
-          <div className="grid-2">
-            <div className="form-group"><label>Título</label><input type="text" placeholder="Ex: Reunião de pais" value={avTitulo} onChange={e => setAvTitulo(e.target.value)} /></div>
-            <div className="form-group"><label>Categoria</label>
-              <select value={avCat} onChange={e => setAvCat(e.target.value)}>
-                <option value="comunicados">Comunicado</option>
-                <option value="matricula">Matrícula</option>
-                <option value="pais">Para pais</option>
-                <option value="documentos">Documento</option>
-              </select>
+        <div>
+          <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Cadastrar Aviso</h3>
+            <div className="grid-2">
+              <div className="form-group"><label>Título</label><input type="text" placeholder="Ex: Reunião de pais" value={avTitulo} onChange={e => setAvTitulo(e.target.value)} /></div>
+              <div className="form-group"><label>Categoria</label>
+                <select value={avCat} onChange={e => setAvCat(e.target.value)}>
+                  <option value="comunicados">Comunicado</option>
+                  <option value="matricula">Matrícula</option>
+                  <option value="pais">Para pais</option>
+                  <option value="documentos">Documento</option>
+                </select>
+              </div>
             </div>
-          </div>
-          <div className="form-group"><label>Descrição</label><textarea placeholder="Detalhes do aviso..." value={avDesc} onChange={e => setAvDesc(e.target.value)} /></div>
-          <div className="grid-2">
-            <div className="form-group"><label>Data</label><input type="date" value={avData} onChange={e => setAvData(e.target.value)} /></div>
-            <div className="form-group"><label>Prioridade</label>
-              <select value={avPrio} onChange={e => setAvPrio(e.target.value)}>
-                <option value="normal">Normal</option>
-                <option value="urgente">Urgente</option>
-                <option value="info">Informativo</option>
-              </select>
+            <div className="form-group"><label>Descrição</label><textarea placeholder="Detalhes do aviso..." value={avDesc} onChange={e => setAvDesc(e.target.value)} /></div>
+            <div className="grid-2">
+              <div className="form-group"><label>Data</label><input type="date" value={avData} onChange={e => setAvData(e.target.value)} /></div>
+              <div className="form-group"><label>Prioridade</label>
+                <select value={avPrio} onChange={e => setAvPrio(e.target.value)}>
+                  <option value="normal">Normal</option>
+                  <option value="urgente">Urgente</option>
+                  <option value="info">Informativo</option>
+                </select>
+              </div>
             </div>
+            <button className="p-btn p-btn-gold" onClick={addAviso}>+ Publicar Aviso</button>
           </div>
-          <button className="p-btn p-btn-gold" onClick={addAviso}>+ Publicar Aviso</button>
+          <div className="admin-form">
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
+              Avisos Cadastrados ({avisosList.length})
+            </h3>
+            {avisosList.length === 0 ? (
+              <div className="empty"><div className="empty-icon">🔔</div><p>Nenhum aviso cadastrado</p></div>
+            ) : avisosList.map(a => (
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.75rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '.88rem', color: 'var(--navy)' }}>{a.titulo}</div>
+                  <div style={{ fontSize: '.72rem', color: '#9ca3af' }}>{a.categoria} · {a.prioridade}</div>
+                </div>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delAviso(a.id, a.titulo)}>
+                  🗑️
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {/* ── PROVAS ── */}
       {adminTab === 'provas' && (
-        <div className="admin-form">
-          <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Cadastrar Prova</h3>
-          <div className="grid-2">
-            <div className="form-group"><label>Disciplina</label><input type="text" placeholder="Ex: Matemática" value={pvDisc} onChange={e => setPvDisc(e.target.value)} /></div>
-            <div className="form-group"><label>Turma</label>
-              <select value={pvTurma} onChange={e => setPvTurma(e.target.value)}>
-                <option value="1a">1º Ano</option>
-                <option value="2a">2º Ano</option>
-                <option value="3a">3º Ano</option>
-              </select>
+        <div>
+          <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Cadastrar Prova</h3>
+            <div className="grid-2">
+              <div className="form-group"><label>Disciplina</label><input type="text" placeholder="Ex: Matemática" value={pvDisc} onChange={e => setPvDisc(e.target.value)} /></div>
+              <div className="form-group"><label>Turma</label>
+                <select value={pvTurma} onChange={e => setPvTurma(e.target.value)}>
+                  <option value="1a">1º Ano</option>
+                  <option value="2a">2º Ano</option>
+                  <option value="3a">3º Ano</option>
+                </select>
+              </div>
+              <div className="form-group"><label>Data</label><input type="date" value={pvData} onChange={e => setPvData(e.target.value)} /></div>
+              <div className="form-group"><label>Horário</label><input type="time" value={pvHora} onChange={e => setPvHora(e.target.value)} /></div>
+              <div className="form-group"><label>Tipo</label>
+                <select value={pvTipo} onChange={e => setPvTipo(e.target.value)}>
+                  <option>Prova Bimestral</option><option>Prova Mensal</option>
+                  <option>Trabalho</option><option>Seminário</option>
+                </select>
+              </div>
             </div>
-            <div className="form-group"><label>Data</label><input type="date" value={pvData} onChange={e => setPvData(e.target.value)} /></div>
-            <div className="form-group"><label>Horário</label><input type="time" value={pvHora} onChange={e => setPvHora(e.target.value)} /></div>
-            <div className="form-group"><label>Tipo</label>
-              <select value={pvTipo} onChange={e => setPvTipo(e.target.value)}>
-                <option>Prova Bimestral</option><option>Prova Mensal</option>
-                <option>Trabalho</option><option>Seminário</option>
-              </select>
-            </div>
+            <div className="form-group"><label>Observações</label><textarea placeholder="Conteúdos que serão cobrados..." value={pvObs} onChange={e => setPvObs(e.target.value)} /></div>
+            <button className="p-btn p-btn-gold" onClick={addProva}>+ Cadastrar Prova</button>
           </div>
-          <div className="form-group"><label>Observações</label><textarea placeholder="Conteúdos que serão cobrados..." value={pvObs} onChange={e => setPvObs(e.target.value)} /></div>
-          <button className="p-btn p-btn-gold" onClick={addProva}>+ Cadastrar Prova</button>
+          <div className="admin-form">
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
+              Provas Cadastradas ({provasList.length})
+            </h3>
+            {provasList.length === 0 ? (
+              <div className="empty"><div className="empty-icon">📋</div><p>Nenhuma prova cadastrada</p></div>
+            ) : provasList.map(p => (
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.75rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '.88rem', color: 'var(--navy)' }}>{p.disciplina}</div>
+                  <div style={{ fontSize: '.72rem', color: '#9ca3af' }}>{p.turma} · {p.data} · {p.tipo}</div>
+                </div>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delProva(p.id, p.disciplina)}>
+                  🗑️
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -573,17 +691,17 @@ export default function Admin({ onToast }: Props) {
           </div>
           <div className="admin-form">
             <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
-              Clubes Cadastrados ({clubes.length})
+              Clubes Cadastrados ({clubesList.length})
             </h3>
-            {clubes.length === 0 ? (
+            {clubesList.length === 0 ? (
               <div className="empty"><div className="empty-icon">🎭</div><p>Nenhum clube cadastrado</p></div>
-            ) : clubes.map((c, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.75rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+            ) : clubesList.map(c => (
+              <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.75rem 0', borderBottom: '1px dashed var(--p-border)' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, fontSize: '.88rem', color: 'var(--navy)' }}>{c.nome}</div>
                   <div style={{ fontSize: '.72rem', color: '#9ca3af' }}>{c.professor} · {c.horario} · {c.integrantes} integrantes</div>
                 </div>
-                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delClb(i, c.nome)}>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delClb(c.id, c.nome)}>
                   🗑️
                 </button>
               </div>
@@ -619,19 +737,19 @@ export default function Admin({ onToast }: Props) {
           </div>
           <div className="admin-form">
             <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>Avisos Publicados</h3>
-            {Object.keys(avisosSalas).length === 0 || Object.values(avisosSalas).every(l => l.length === 0) ? (
+            {avisosSalasList.length === 0 ? (
               <div className="empty"><div className="empty-icon">🏫</div><p>Nenhum aviso publicado ainda</p></div>
-            ) : Object.entries(avisosSalas).map(([id, lista]) => lista.map((texto, i) => (
-              <div key={`${id}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.7rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+            ) : avisosSalasList.map(a => (
+              <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.7rem 0', borderBottom: '1px dashed var(--p-border)' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '.7rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em' }}>{id}</div>
-                  <div style={{ fontSize: '.85rem', color: 'var(--navy2)' }}>{texto}</div>
+                  <div style={{ fontSize: '.7rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em' }}>{a.sala_id}</div>
+                  <div style={{ fontSize: '.85rem', color: 'var(--navy2)' }}>{a.texto}</div>
                 </div>
-                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delAvisoSala(id, i)}>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delAvisoSala(a.id)}>
                   🗑️
                 </button>
               </div>
-            )))}
+            ))}
           </div>
         </div>
       )}

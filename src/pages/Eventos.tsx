@@ -1,5 +1,20 @@
-import { useState } from "react";
-import { eventos, type Evento, fmtDate } from "@/data/store";
+import { useEffect, useState } from "react";
+import { listarEventos, type EventoDB } from "@/lib/dados";
+
+type EventoView = {
+  id: string;
+  titulo: string;
+  data: string;
+  hora: string;
+  local: string;
+  cat: string;
+  desc: string;
+  cor: string;
+};
+
+function toView(e: EventoDB): EventoView {
+  return { id: e.id, titulo: e.titulo, data: e.data, hora: e.hora, local: e.local, cat: e.categoria, desc: e.descricao, cor: e.cor };
+}
 
 const CAT_LABELS: Record<string, string> = {
   cultural: '🎭 Cultural',
@@ -18,8 +33,17 @@ const CAT_COLORS: Record<string, string> = {
 };
 
 export default function Eventos() {
+  const [eventos, setEventos] = useState<EventoView[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('todos');
-  const [selected, setSelected] = useState<Evento | null>(null);
+  const [selected, setSelected] = useState<EventoView | null>(null);
+
+  useEffect(() => {
+    listarEventos().then(lista => {
+      setEventos(lista.map(toView));
+      setLoading(false);
+    });
+  }, []);
 
   const today = new Date();
 
@@ -40,6 +64,21 @@ export default function Eventos() {
     if (diff === 0) return 'Hoje!';
     if (diff === 1) return 'Amanhã';
     return `em ${diff} dias`;
+  }
+
+  if (loading) {
+    return (
+      <div className="animate-fade-up">
+        <div className="sec-header">
+          <div className="sec-icon">🗓️</div>
+          <div className="sec-title">
+            <h2>Eventos Escolares</h2>
+            <p>Calendário de eventos, datas e atividades</p>
+          </div>
+        </div>
+        <p style={{ color: '#9ca3af' }}>Carregando eventos...</p>
+      </div>
+    );
   }
 
   return (

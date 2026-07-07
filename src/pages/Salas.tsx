@@ -1,6 +1,22 @@
-import { CURSOS, ANOS, TURMAS, salaId, avisosSalas } from "@/data/store";
+import { useEffect, useState } from "react";
+import { CURSOS, ANOS, TURMAS, salaId } from "@/data/store";
+import { listarAvisosSalas, type AvisoSalaDB } from "@/lib/dados";
 
 export default function Salas() {
+  const [avisos, setAvisos] = useState<AvisoSalaDB[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    listarAvisosSalas().then(lista => {
+      setAvisos(lista);
+      setLoading(false);
+    });
+  }, []);
+
+  function avisosDaSala(id: string) {
+    return avisos.filter(a => a.sala_id === id);
+  }
+
   return (
     <div className="animate-fade-up">
       <div className="sec-header">
@@ -11,7 +27,9 @@ export default function Salas() {
         </div>
       </div>
 
-      {CURSOS.map(curso => (
+      {loading && <p style={{ color: '#9ca3af' }}>Carregando avisos...</p>}
+
+      {!loading && CURSOS.map(curso => (
         <div key={curso.slug} className="p-card" style={{ marginBottom: '1.5rem' }}>
           <div className="p-card-header">
             <div className="p-card-icon teal">📘</div>
@@ -21,17 +39,17 @@ export default function Salas() {
             <div className="grid-3">
               {ANOS.flatMap(ano => TURMAS.map(turma => {
                 const id = salaId(curso.slug, ano, turma);
-                const avisos = avisosSalas[id] || [];
+                const lista = avisosDaSala(id);
                 return (
                   <div key={id} className="content-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                     <div className="content-title" style={{ marginBottom: '.5rem' }}>{ano}º Ano {turma}</div>
-                    {avisos.length === 0 ? (
+                    {lista.length === 0 ? (
                       <div style={{ fontSize: '.78rem', color: '#9ca3af' }}>Nenhum aviso</div>
                     ) : (
                       <ul style={{ listStyle: 'none', padding: 0, margin: 0, width: '100%' }}>
-                        {avisos.map((a, i) => (
-                          <li key={i} style={{ fontSize: '.8rem', color: '#4b5563', padding: '.3rem 0', borderTop: i > 0 ? '1px dashed var(--p-border)' : 'none' }}>
-                            {a}
+                        {lista.map((a, i) => (
+                          <li key={a.id} style={{ fontSize: '.8rem', color: '#4b5563', padding: '.3rem 0', borderTop: i > 0 ? '1px dashed var(--p-border)' : 'none' }}>
+                            {a.texto}
                           </li>
                         ))}
                       </ul>

@@ -1,15 +1,25 @@
-import { useState } from "react";
-import { store, fmtDate, solicitacoes, addSolicitacao } from "@/data/store";
+import { useEffect, useState } from "react";
+import { solicitacoes, addSolicitacao } from "@/data/store";
+import { listarAvisos, type AvisoDB } from "@/lib/dados";
 
 interface Props {
   onToast: (msg: string) => void;
 }
 
 export default function Secretaria({ onToast }: Props) {
+  const [avisos, setAvisos] = useState<AvisoDB[]>([]);
+  const [loading, setLoading] = useState(true);
   const [cat, setCat] = useState('comunicados');
   const [, forceUpdate] = useState(0);
 
-  const filtered = store.avisos.filter(a => a.cat === cat);
+  useEffect(() => {
+    listarAvisos().then(lista => {
+      setAvisos(lista);
+      setLoading(false);
+    });
+  }, []);
+
+  const filtered = avisos.filter(a => a.categoria === cat);
 
   const cats = [
     { id: 'comunicados', label: 'Comunicados' },
@@ -37,6 +47,13 @@ export default function Secretaria({ onToast }: Props) {
     addSolicitacao(tipo);
     forceUpdate(n => n + 1);
     onToast(`✅ Solicitação de "${tipo}" enviada!`);
+  }
+
+  function fmtData(iso: string) {
+    if (!iso) return '';
+    const [, m, d] = iso.split('-');
+    const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    return `${d}/${months[parseInt(m) - 1]}`;
   }
 
   return (
@@ -96,22 +113,24 @@ export default function Secretaria({ onToast }: Props) {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <p style={{ color: '#9ca3af' }}>Carregando avisos...</p>
+      ) : filtered.length === 0 ? (
         <div className="empty">
           <div className="empty-icon">📭</div>
           <p>Nenhum aviso nesta categoria</p>
         </div>
       ) : (
         <div>
-          {filtered.map((a, i) => (
-            <div key={i} className="aviso-card">
+          {filtered.map(a => (
+            <div key={a.id} className="aviso-card">
               <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center', marginBottom: '.6rem' }}>
                 <PriorBadge p={a.prioridade} />
-                <span className="p-badge p-badge-navy">{a.cat}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '.75rem', color: '#9ca3af' }}>{fmtDate(a.data)}</span>
+                <span className="p-badge p-badge-navy">{a.categoria}</span>
+                <span style={{ marginLeft: 'auto', fontSize: '.75rem', color: '#9ca3af' }}>{fmtData(a.data)}</span>
               </div>
               <h3 style={{ fontFamily: 'var(--font-h)', fontSize: '1.1rem', color: 'var(--navy)', marginBottom: '.4rem' }}>{a.titulo}</h3>
-              <p style={{ fontSize: '.88rem', color: '#4b5563', lineHeight: 1.6 }}>{a.desc}</p>
+              <p style={{ fontSize: '.88rem', color: '#4b5563', lineHeight: 1.6 }}>{a.descricao}</p>
             </div>
           ))}
         </div>
