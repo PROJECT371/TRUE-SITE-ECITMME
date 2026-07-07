@@ -111,6 +111,7 @@ export type SolicitacaoDB = {
   id: string;
   tipo: string;
   status: 'em análise' | 'aprovado' | 'finalizado';
+  aluno_nome?: string | null;
   created_at?: string;
 };
 
@@ -120,8 +121,8 @@ export async function listarSolicitacoes(): Promise<SolicitacaoDB[]> {
   return data as SolicitacaoDB[];
 }
 
-export async function criarSolicitacao(tipo: string) {
-  const { error } = await db.from('solicitacoes').insert({ tipo });
+export async function criarSolicitacao(tipo: string, alunoNome?: string) {
+  const { error } = await db.from('solicitacoes').insert({ tipo, aluno_nome: alunoNome || null });
   if (error) throw error;
 }
 
@@ -156,5 +157,59 @@ export async function criarAvisoSala(salaId: string, texto: string) {
 
 export async function removerAvisoSala(id: string) {
   const { error } = await db.from('avisos_salas').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ================= Horários de aula ================= */
+export type HorarioDB = {
+  id: string;
+  turma_id: string;
+  dia: 'Seg' | 'Ter' | 'Qua' | 'Qui' | 'Sex';
+  horario: string;
+  disciplina: string;
+  sala: string | null;
+  professor: string | null;
+  ordem: number;
+};
+
+export async function listarHorarios(turmaId?: string): Promise<HorarioDB[]> {
+  let query = db.from('horarios').select('*').order('ordem', { ascending: true });
+  if (turmaId) query = query.eq('turma_id', turmaId);
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return data as HorarioDB[];
+}
+
+export async function criarHorario(h: Omit<HorarioDB, 'id'>) {
+  const { error } = await db.from('horarios').insert(h);
+  if (error) throw error;
+}
+
+export async function removerHorario(id: string) {
+  const { error } = await db.from('horarios').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/* ================= Participação em Clubes ================= */
+export type MembroClube = {
+  id: string;
+  clube_id: string;
+  aluno_id: string;
+  aluno_nome: string;
+};
+
+export async function listarMembrosClube(): Promise<MembroClube[]> {
+  const { data, error } = await db.from('clube_membros').select('*');
+  if (error || !data) return [];
+  return data as MembroClube[];
+}
+
+export async function entrarClube(clubeId: string, alunoId: string, alunoNome: string) {
+  const { error } = await db.from('clube_membros').insert({ clube_id: clubeId, aluno_id: alunoId, aluno_nome: alunoNome });
+  if (error) throw error;
+}
+
+export async function sairClube(clubeId: string, alunoId: string) {
+  const { error } = await db.from('clube_membros').delete().eq('clube_id', clubeId).eq('aluno_id', alunoId);
   if (error) throw error;
 }
