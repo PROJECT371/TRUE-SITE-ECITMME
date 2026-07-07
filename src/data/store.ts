@@ -128,35 +128,6 @@ export let disciplinas: Disciplina[] = [
 export function addDisciplina(d: Disciplina) { disciplinas.push(d); }
 export function removeDisciplina(i: number) { disciplinas.splice(i, 1); }
 
-/* ================= Secretaria: solicitações ================= */
-export type Solicitacao = {
-  id: number;
-  tipo: string;
-  data: string;
-  status: 'em análise' | 'aprovado' | 'finalizado';
-};
-
-let _solicitacaoId = 0;
-
-export let solicitacoes: Solicitacao[] = [];
-
-export function addSolicitacao(tipo: string) {
-  _solicitacaoId++;
-  const hoje = new Date();
-  const data = `${String(hoje.getDate()).padStart(2, '0')}/${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-  solicitacoes.unshift({ id: _solicitacaoId, tipo, data, status: 'em análise' });
-}
-
-export function updateSolicitacaoStatus(id: number, status: Solicitacao['status']) {
-  const s = solicitacoes.find(s => s.id === id);
-  if (s) s.status = status;
-}
-
-export function removeSolicitacao(id: number) {
-  const idx = solicitacoes.findIndex(s => s.id === id);
-  if (idx >= 0) solicitacoes.splice(idx, 1);
-}
-
 /* ================= Salas por curso, ano e turma ================= */
 export const CURSOS = [
   { slug: 'agro', nome: 'Agronegócio' },
