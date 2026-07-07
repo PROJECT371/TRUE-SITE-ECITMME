@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { store } from "@/data/store";
 import { listarEventos, type EventoDB } from "@/lib/dados";
 
 type EventoView = {
@@ -40,7 +41,17 @@ export default function Eventos() {
 
   useEffect(() => {
     listarEventos().then(lista => {
-      setEventos(lista.map(toView));
+      const jogosComoEventos: EventoView[] = store.interclasse.jogos.map((j, i) => ({
+        id: `jogo-${i}`,
+        titulo: `${j.a} × ${j.b}`,
+        data: j.data,
+        hora: j.hora,
+        local: j.local,
+        cat: 'esporte',
+        desc: `Jogo do Interclasse · Modalidade: ${j.mod}${j.placar !== '–' ? ` · Placar: ${j.placar}` : ''}`,
+        cor: '#7c3aed',
+      }));
+      setEventos([...lista.map(toView), ...jogosComoEventos]);
       setLoading(false);
     });
   }, []);
