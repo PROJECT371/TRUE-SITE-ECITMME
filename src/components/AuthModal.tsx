@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { cadastrar, entrar, type Cargo } from "@/lib/auth";
-import { disciplinas } from "@/data/store";
+import { disciplinas, CURSOS, ANOS, TURMAS, salaId } from "@/data/store";
 
 interface Props {
   onClose: () => void;
@@ -9,6 +9,7 @@ interface Props {
 }
 
 const CARGOS: Array<{ id: Cargo; label: string }> = [
+  { id: 'aluno', label: 'Aluno(a)' },
   { id: 'professor', label: 'Professor(a)' },
   { id: 'secretario_pedagogico', label: 'Secretário(a) Pedagógico(a)' },
   { id: 'secretario_administrativo', label: 'Secretário(a) Administrativo(a)' },
@@ -19,8 +20,12 @@ export default function AuthModal({ onClose, onLogged, onToast }: Props) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [role, setRole] = useState<Cargo>('professor');
+  const [role, setRole] = useState<Cargo>('aluno');
   const [disciplina, setDisciplina] = useState(disciplinas[0]?.nome || '');
+  const [matricula, setMatricula] = useState('');
+  const [curso, setCurso] = useState(CURSOS[0].slug);
+  const [ano, setAno] = useState(ANOS[0]);
+  const [turma, setTurma] = useState(TURMAS[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,7 +36,9 @@ export default function AuthModal({ onClose, onLogged, onToast }: Props) {
     try {
       if (modo === 'cadastro') {
         if (!nome) { setError('Informe seu nome.'); setLoading(false); return; }
-        const uid = await cadastrar(nome, email, senha, role, disciplina);
+        if (role === 'aluno' && !matricula) { setError('Informe seu número de matrícula.'); setLoading(false); return; }
+        const turmaId = role === 'aluno' ? salaId(curso, ano, turma) : '';
+        const uid = await cadastrar(nome, email, senha, role, disciplina, turmaId, matricula);
         onToast('✅ Conta criada com sucesso!');
         onLogged(uid);
         onClose();
@@ -66,7 +73,7 @@ export default function AuthModal({ onClose, onLogged, onToast }: Props) {
           {modo === 'cadastro' && (
             <>
               <div className="form-group">
-                <label>Cargo</label>
+                <label>Sou</label>
                 <select value={role} onChange={e => setRole(e.target.value as Cargo)}>
                   {CARGOS.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
@@ -75,6 +82,7 @@ export default function AuthModal({ onClose, onLogged, onToast }: Props) {
                 <label>Nome completo</label>
                 <input type="text" placeholder="Seu nome" value={nome} onChange={e => setNome(e.target.value)} />
               </div>
+
               {role === 'professor' && (
                 <div className="form-group">
                   <label>Disciplina que você leciona</label>
@@ -90,6 +98,35 @@ export default function AuthModal({ onClose, onLogged, onToast }: Props) {
                     </optgroup>
                   </select>
                 </div>
+              )}
+
+              {role === 'aluno' && (
+                <>
+                  <div className="form-group">
+                    <label>Número de matrícula</label>
+                    <input type="text" placeholder="Ex: 2026001234" value={matricula} onChange={e => setMatricula(e.target.value)} />
+                  </div>
+                  <div className="grid-3">
+                    <div className="form-group">
+                      <label>Curso</label>
+                      <select value={curso} onChange={e => setCurso(e.target.value)}>
+                        {CURSOS.map(c => <option key={c.slug} value={c.slug}>{c.nome}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Ano</label>
+                      <select value={ano} onChange={e => setAno(Number(e.target.value))}>
+                        {ANOS.map(a => <option key={a} value={a}>{a}º</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Turma</label>
+                      <select value={turma} onChange={e => setTurma(e.target.value)}>
+                        {TURMAS.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </>
               )}
             </>
           )}
