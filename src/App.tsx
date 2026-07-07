@@ -3,11 +3,11 @@ import Inicio from "@/pages/Inicio";
 import Disciplinas from "@/pages/Disciplinas";
 import Biblioteca from "@/pages/Biblioteca";
 import Provas from "@/pages/Provas";
+import Horarios from "@/pages/Horarios";
 import Conteudos from "@/pages/Conteudos";
 import Secretaria from "@/pages/Secretaria";
 import Clubes from "@/pages/Clubes";
 import Salas from "@/pages/Salas";
-import Cardapio from "@/pages/Cardapio";
 import Interclasse from "@/pages/Interclasse";
 import Eventos from "@/pages/Eventos";
 import Admin from "@/pages/Admin";
@@ -17,18 +17,18 @@ import AuthModal from "@/components/AuthModal";
 import { db } from "@/lib/supabase";
 import { sair, buscarPerfil, type Perfil } from "@/lib/auth";
 
-type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'cardapio' | 'interclasse' | 'eventos' | 'admin';
+type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'horarios' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'interclasse' | 'eventos' | 'admin';
 
 const NAV_ITEMS: Array<{ id: Section; label: string; icon: string }> = [
   { id: 'inicio',      label: 'Início',      icon: '🏠' },
   { id: 'disciplinas', label: 'Disciplinas', icon: '📘' },
   { id: 'biblioteca',  label: 'Biblioteca',  icon: '📚' },
   { id: 'provas',      label: 'Provas',      icon: '📋' },
+  { id: 'horarios',    label: 'Horários',    icon: '🗓️' },
   { id: 'conteudos',   label: 'Conteúdos',   icon: '📖' },
   { id: 'secretaria',  label: 'Secretaria',  icon: '📢' },
   { id: 'clubes',      label: 'Clubes',      icon: '🎭' },
   { id: 'salas',       label: 'Salas',       icon: '🏫' },
-  { id: 'cardapio',    label: 'Cardápio',    icon: '🍽️' },
   { id: 'interclasse', label: 'Interclasse', icon: '🏆' },
   { id: 'eventos',     label: 'Eventos',     icon: '🗓️' },
 ];
@@ -182,13 +182,13 @@ export default function App() {
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2.5rem 1.5rem', minHeight: '70vh' }}>
         {section === 'inicio'      && <Inicio onNavigate={navigate} />}
         {section === 'disciplinas' && <Disciplinas perfil={perfil} onToast={showToast} />}
-        {section === 'biblioteca'  && <Biblioteca onToast={showToast} />}
+        {section === 'biblioteca'  && <Biblioteca perfil={perfil} onToast={showToast} />}
         {section === 'provas'      && <Provas />}
+        {section === 'horarios'    && <Horarios />}
         {section === 'conteudos'   && <Conteudos />}
         {section === 'secretaria'  && <Secretaria perfil={perfil} onToast={showToast} />}
-        {section === 'clubes'      && <Clubes />}
-        {section === 'salas'       && <Salas />}
-        {section === 'cardapio'    && <Cardapio />}
+        {section === 'clubes'      && <Clubes perfil={perfil} onToast={showToast} />}
+        {section === 'salas'       && <Salas perfil={perfil} />}
         {section === 'interclasse' && <Interclasse />}
         {section === 'eventos'     && <Eventos />}
         {section === 'admin'       && <Admin onToast={showToast} />}
