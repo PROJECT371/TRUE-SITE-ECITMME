@@ -825,7 +825,12 @@ export default function Admin({ onToast }: Props) {
               <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.7rem 0', borderBottom: '1px dashed var(--p-border)' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '.7rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em' }}>{a.sala_id}</div>
-                  <div style={{ fontSize: '.85rem', color: 'var(--navy2)' }}>{a.texto}</div>
+                  <div style={{ fontSize: '.85rem', color: 'var(--navy2)' }}>
+                    {a.tipo === 'pdf' ? '📄 ' : a.tipo === 'video' ? '🎬 ' : '🔔 '}{a.texto}
+                  </div>
+                  {a.professor_nome && (
+                    <div style={{ fontSize: '.7rem', color: '#9ca3af' }}>— {a.professor_nome}</div>
+                  )}
                 </div>
                 <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delAvisoSala(a.id)}>
                   🗑️
