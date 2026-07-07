@@ -68,6 +68,7 @@ export default function Admin({ onToast }: Props) {
 
   // Disciplinas form
   const [dsNome, setDsNome] = useState('');
+  const [dsCat, setDsCat] = useState<'comum' | 'tecnica' | 'diversificada'>('comum');
   const [dsProf, setDsProf] = useState('');
   const [dsHorario, setDsHorario] = useState('');
   const [dsCor, setDsCor] = useState('#c9993a');
@@ -154,7 +155,7 @@ export default function Admin({ onToast }: Props) {
   function addDisc() {
     if (!dsNome || !dsProf) { onToast('⚠️ Preencha todos os campos obrigatórios'); return; }
     addDisciplina({
-      nome: dsNome, professor: dsProf, horario: dsHorario, cor: dsCor,
+      nome: dsNome, categoria: dsCat, professor: dsProf, horario: dsHorario, cor: dsCor,
       conteudo: dsConteudo.split(',').map(s => s.trim()).filter(Boolean),
       atividades: dsAtividades.split(',').map(s => s.trim()).filter(Boolean),
     });
@@ -486,6 +487,13 @@ export default function Admin({ onToast }: Props) {
             <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Cadastrar Disciplina</h3>
             <div className="grid-2">
               <div className="form-group"><label>Nome da Disciplina</label><input type="text" placeholder="Ex: Matemática" value={dsNome} onChange={e => setDsNome(e.target.value)} /></div>
+              <div className="form-group"><label>Categoria</label>
+                <select value={dsCat} onChange={e => setDsCat(e.target.value as 'comum' | 'tecnica' | 'diversificada')}>
+                  <option value="comum">Base Comum</option>
+                  <option value="tecnica">Base Técnica</option>
+                  <option value="diversificada">Parte Diversificada</option>
+                </select>
+              </div>
               <div className="form-group"><label>Professor(a)</label><input type="text" placeholder="Ex: Profª. Ana Beatriz" value={dsProf} onChange={e => setDsProf(e.target.value)} /></div>
               <div className="form-group"><label>Horário</label><input type="text" placeholder="Ex: Seg/Qua 07h30" value={dsHorario} onChange={e => setDsHorario(e.target.value)} /></div>
               <div className="form-group"><label>Cor</label><input type="color" value={dsCor} onChange={e => setDsCor(e.target.value)} style={{ height: '42px', padding: '4px' }} /></div>
