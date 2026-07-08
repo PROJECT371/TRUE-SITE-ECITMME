@@ -118,6 +118,8 @@ export default function Admin({ onToast }: Props) {
   const [hrSala, setHrSala] = useState('');
   const [hrProfessor, setHrProfessor] = useState('');
   const [hrOrdem, setHrOrdem] = useState(1);
+  const [hrColagem, setHrColagem] = useState('');
+  const [importando, setImportando] = useState(false);
 
   function checkAdmin() {
     if (pwd === ADMIN_PASS) { setUnlocked(true); setError(''); }
@@ -323,6 +325,48 @@ export default function Admin({ onToast }: Props) {
     } catch {
       onToast('❌ Não foi possível remover.');
     }
+  }
+
+  async function importarHorariosEmMassa() {
+    if (!hrColagem.trim()) { onToast('⚠️ Cole as linhas do horário primeiro'); return; }
+    const linhas = hrColagem.split('\n').map(l => l.trim()).filter(Boolean);
+    if (linhas.length === 0) { onToast('⚠️ Nenhuma linha válida encontrada'); return; }
+
+    const diaMap: Record<string, 'Seg' | 'Ter' | 'Qua' | 'Qui' | 'Sex'> = {
+      seg: 'Seg', segunda: 'Seg', ter: 'Ter', terça: 'Ter', terca: 'Ter',
+      qua: 'Qua', quarta: 'Qua', qui: 'Qui', quinta: 'Qui', sex: 'Sex', sexta: 'Sex',
+    };
+
+    const turmaId = salaId(hrCurso, hrAno, hrTurma);
+    let ordemAtual = 1;
+    let erros = 0;
+
+    setImportando(true);
+    for (const linha of linhas) {
+      const partes = linha.split(';').map(p => p.trim());
+      const [diaTxt, horario, disciplina, sala, professor] = partes;
+      const diaChave = (diaTxt || '').toLowerCase().replace(/[^a-zçã]/g, '');
+      const dia = diaMap[diaChave];
+      if (!dia || !horario || !disciplina) { erros++; continue; }
+      try {
+        await criarHorario({
+          turma_id: turmaId,
+          dia,
+          horario,
+          disciplina,
+          sala: sala || null,
+          professor: professor || null,
+          ordem: ordemAtual++,
+        });
+      } catch {
+        erros++;
+      }
+    }
+    setImportando(false);
+    setHorariosList(await listarHorarios());
+    setHrColagem('');
+    if (erros === 0) onToast(`✅ ${linhas.length} aulas importadas com sucesso!`);
+    else onToast(`⚠️ Importado com ${erros} linha(s) ignorada(s) (formato incorreto)`);
   }
 
   const adminTabs = [
@@ -593,6 +637,27 @@ export default function Admin({ onToast }: Props) {
             <div className="form-group"><label>Ordem no dia (1, 2, 3...)</label><input type="number" min={1} value={hrOrdem} onChange={e => setHrOrdem(Number(e.target.value))} /></div>
             <button className="p-btn p-btn-gold" onClick={addHorario}>+ Adicionar Aula</button>
           </div>
+
+          <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '.5rem', color: 'var(--navy)' }}>Importar Várias Aulas de Uma Vez</h3>
+            <p style={{ fontSize: '.82rem', color: '#6b7280', marginBottom: '1rem' }}>
+              Usa o <strong>Curso / Ano / Turma</strong> escolhidos acima. Cole uma aula por linha, nesse formato (separado por ponto e vírgula):
+              <br /><code style={{ fontSize: '.75rem' }}>Dia;Horário;Disciplina;Sala;Professor</code>
+              <br />Exemplo: <code style={{ fontSize: '.75rem' }}>Seg;07:30-09:10;IC;Sala 05 - Arte;Jonatas</code>
+            </p>
+            <div className="form-group">
+              <textarea
+                placeholder={'Seg;07:30-09:10;IC;Sala 05 - Arte;Jonatas\nSeg;09:30-10:20;Recomposição L.P.;Sala 10 - Geografia;Stephanie\nTer;07:30-09:10;Arquitetura de Hardware;Sala 03 - Física;Rivanildo'}
+                rows={8}
+                value={hrColagem}
+                onChange={e => setHrColagem(e.target.value)}
+                style={{ fontFamily: 'monospace', fontSize: '.8rem' }}
+              />
+            </div>
+            <button className="p-btn p-btn-gold" disabled={importando} onClick={importarHorariosEmMassa}>
+              {importando ? 'Importando...' : '+ Importar Todas as Linhas'}
+            </button>
+          </div>
           <div className="admin-form">
             <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
               Aulas Cadastradas ({horariosList.length})
@@ -849,3 +914,4 @@ export default function Admin({ onToast }: Props) {
     </div>
   );
 }
+
