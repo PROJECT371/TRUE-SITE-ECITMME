@@ -1,10 +1,11 @@
-const CACHE_NAME = 'ecit-portal-v1';
+const CACHE_NAME = 'ecit-portal-v2';
+const BASE = '/TRUE-SITE-ECITMME/';
 
 const STATIC_ASSETS = [
-  '/',
-  '/manifest.webmanifest',
-  '/icon-192.svg',
-  '/icon-512.svg',
+  BASE,
+  BASE + 'manifest.webmanifest',
+  BASE + 'icon-192.svg',
+  BASE + 'icon-512.svg',
 ];
 
 self.addEventListener('install', (event) => {
@@ -63,6 +64,6 @@ self.addEventListener('fetch', (event) => {
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         return response;
       })
-      .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/')))
+      .catch(() => caches.match(event.request).then((cached) => cached || caches.match(BASE)))
   );
 });
