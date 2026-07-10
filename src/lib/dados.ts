@@ -244,3 +244,36 @@ export async function sairClube(clubeId: string, alunoId: string) {
   const { error } = await db.from('clube_membros').delete().eq('clube_id', clubeId).eq('aluno_id', alunoId);
   if (error) throw error;
 }
+
+/* ================= Galeria de fotos ================= */
+export type FotoDB = {
+  id: string;
+  url: string;
+  legenda: string | null;
+  created_at?: string;
+};
+
+export async function listarFotos(): Promise<FotoDB[]> {
+  const { data, error } = await db.from('galeria_fotos').select('*').order('created_at', { ascending: false });
+  if (error || !data) return [];
+  return data as FotoDB[];
+}
+
+export async function enviarFoto(arquivo: File, legenda: string): Promise<void> {
+  const caminho = `galeria/${Date.now()}-${arquivo.name}`;
+  const { error: upErr } = await db.storage.from('materiais').upload(caminho, arquivo);
+  if (upErr) throw upErr;
+
+  const { data: urlData } = db.storage.from('materiais').getPublicUrl(caminho);
+
+  const { error } = await db.from('galeria_fotos').insert({
+    url: urlData.publicUrl,
+    legenda: legenda || null,
+  });
+  if (error) throw error;
+}
+
+export async function removerFoto(id: string): Promise<void> {
+  const { error } = await db.from('galeria_fotos').delete().eq('id', id);
+  if (error) throw error;
+}
