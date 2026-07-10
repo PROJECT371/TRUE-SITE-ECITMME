@@ -7,7 +7,7 @@ import {
   listarClubes, criarClube, removerClube, type ClubeDB,
   listarAvisosSalas, criarAvisoSala, removerAvisoSala, type AvisoSalaDB,
   listarSolicitacoes, atualizarStatusSolicitacao, removerSolicitacao, type SolicitacaoDB,
-  listarHorarios, criarHorario, removerHorario, type HorarioDB,
+  buscarHorarioAtual, enviarHorarioPdf, removerHorarioPdf, type HorarioPdfDB,
 } from "@/lib/dados";
 
 interface Props {
@@ -30,7 +30,9 @@ export default function Admin({ onToast }: Props) {
   const [clubesList, setClubesList] = useState<ClubeDB[]>([]);
   const [avisosSalasList, setAvisosSalasList] = useState<AvisoSalaDB[]>([]);
   const [solicitacoesList, setSolicitacoesList] = useState<SolicitacaoDB[]>([]);
-  const [horariosList, setHorariosList] = useState<HorarioDB[]>([]);
+  const [horarioPdf, setHorarioPdf] = useState<HorarioPdfDB | null>(null);
+  const [pdfArquivo, setPdfArquivo] = useState<File | null>(null);
+  const [enviandoPdf, setEnviandoPdf] = useState(false);
 
   useEffect(() => {
     listarEventos().then(setEventosList);
@@ -39,7 +41,7 @@ export default function Admin({ onToast }: Props) {
     listarClubes().then(setClubesList);
     listarAvisosSalas().then(setAvisosSalasList);
     listarSolicitacoes().then(setSolicitacoesList);
-    listarHorarios().then(setHorariosList);
+    buscarHorarioAtual().then(setHorarioPdf);
   }, []);
 
   // Eventos form
@@ -109,17 +111,7 @@ export default function Admin({ onToast }: Props) {
   const [slTexto, setSlTexto] = useState('');
 
   // Horários form
-  const [hrCurso, setHrCurso] = useState(CURSOS[0].slug);
-  const [hrAno, setHrAno] = useState(1);
-  const [hrTurma, setHrTurma] = useState('A');
-  const [hrDia, setHrDia] = useState<'Seg' | 'Ter' | 'Qua' | 'Qui' | 'Sex'>('Seg');
-  const [hrHorario, setHrHorario] = useState('');
-  const [hrDisciplina, setHrDisciplina] = useState('');
-  const [hrSala, setHrSala] = useState('');
-  const [hrProfessor, setHrProfessor] = useState('');
-  const [hrOrdem, setHrOrdem] = useState(1);
-  const [hrColagem, setHrColagem] = useState('');
-  const [importando, setImportando] = useState(false);
+  // Cardápio removido — sem estados de horário manual
 
   function checkAdmin() {
     if (pwd === ADMIN_PASS) { setUnlocked(true); setError(''); }
@@ -297,76 +289,30 @@ export default function Admin({ onToast }: Props) {
     }
   }
 
-  async function addHorario() {
-    if (!hrHorario || !hrDisciplina) { onToast('⚠️ Preencha horário e disciplina'); return; }
+  async function enviarPdf() {
+    if (!pdfArquivo) { onToast('⚠️ Selecione o arquivo PDF do horário'); return; }
+    setEnviandoPdf(true);
     try {
-      await criarHorario({
-        turma_id: salaId(hrCurso, hrAno, hrTurma),
-        dia: hrDia,
-        horario: hrHorario,
-        disciplina: hrDisciplina,
-        sala: hrSala || null,
-        professor: hrProfessor || null,
-        ordem: hrOrdem,
-      });
-      setHorariosList(await listarHorarios());
-      setHrHorario(''); setHrDisciplina(''); setHrSala(''); setHrProfessor('');
-      onToast('✅ Aula adicionada ao horário!');
+      await enviarHorarioPdf(pdfArquivo);
+      setHorarioPdf(await buscarHorarioAtual());
+      setPdfArquivo(null);
+      onToast('✅ Horário atualizado com sucesso!');
     } catch {
-      onToast('❌ Não foi possível adicionar.');
+      onToast('❌ Não foi possível enviar o PDF.');
+    } finally {
+      setEnviandoPdf(false);
     }
   }
 
-  async function delHorario(id: string) {
+  async function excluirPdf(id: string) {
+    if (!window.confirm('Remover o horário atual? Os alunos deixarão de ver um PDF até você enviar outro.')) return;
     try {
-      await removerHorario(id);
-      setHorariosList(await listarHorarios());
-      onToast('🗑️ Removido do horário.');
+      await removerHorarioPdf(id);
+      setHorarioPdf(await buscarHorarioAtual());
+      onToast('🗑️ Horário removido.');
     } catch {
       onToast('❌ Não foi possível remover.');
     }
-  }
-
-  async function importarHorariosEmMassa() {
-    if (!hrColagem.trim()) { onToast('⚠️ Cole as linhas do horário primeiro'); return; }
-    const linhas = hrColagem.split('\n').map(l => l.trim()).filter(Boolean);
-    if (linhas.length === 0) { onToast('⚠️ Nenhuma linha válida encontrada'); return; }
-
-    const diaMap: Record<string, 'Seg' | 'Ter' | 'Qua' | 'Qui' | 'Sex'> = {
-      seg: 'Seg', segunda: 'Seg', ter: 'Ter', terça: 'Ter', terca: 'Ter',
-      qua: 'Qua', quarta: 'Qua', qui: 'Qui', quinta: 'Qui', sex: 'Sex', sexta: 'Sex',
-    };
-
-    const turmaId = salaId(hrCurso, hrAno, hrTurma);
-    let ordemAtual = 1;
-    let erros = 0;
-
-    setImportando(true);
-    for (const linha of linhas) {
-      const partes = linha.split(';').map(p => p.trim());
-      const [diaTxt, horario, disciplina, sala, professor] = partes;
-      const diaChave = (diaTxt || '').toLowerCase().replace(/[^a-zçã]/g, '');
-      const dia = diaMap[diaChave];
-      if (!dia || !horario || !disciplina) { erros++; continue; }
-      try {
-        await criarHorario({
-          turma_id: turmaId,
-          dia,
-          horario,
-          disciplina,
-          sala: sala || null,
-          professor: professor || null,
-          ordem: ordemAtual++,
-        });
-      } catch {
-        erros++;
-      }
-    }
-    setImportando(false);
-    setHorariosList(await listarHorarios());
-    setHrColagem('');
-    if (erros === 0) onToast(`✅ ${linhas.length} aulas importadas com sucesso!`);
-    else onToast(`⚠️ Importado com ${erros} linha(s) ignorada(s) (formato incorreto)`);
   }
 
   const adminTabs = [
@@ -597,85 +543,29 @@ export default function Admin({ onToast }: Props) {
       {adminTab === 'horarios' && (
         <div>
           <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Adicionar Aula ao Horário</h3>
-            <div className="grid-3">
-              <div className="form-group"><label>Curso</label>
-                <select value={hrCurso} onChange={e => setHrCurso(e.target.value)}>
-                  {CURSOS.map(c => <option key={c.slug} value={c.slug}>{c.nome}</option>)}
-                </select>
-              </div>
-              <div className="form-group"><label>Ano</label>
-                <select value={hrAno} onChange={e => setHrAno(Number(e.target.value))}>
-                  {ANOS.map(a => <option key={a} value={a}>{a}º Ano</option>)}
-                </select>
-              </div>
-              <div className="form-group"><label>Turma</label>
-                <select value={hrTurma} onChange={e => setHrTurma(e.target.value)}>
-                  {TURMAS.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="grid-2">
-              <div className="form-group"><label>Dia</label>
-                <select value={hrDia} onChange={e => setHrDia(e.target.value as typeof hrDia)}>
-                  <option value="Seg">Segunda-feira</option>
-                  <option value="Ter">Terça-feira</option>
-                  <option value="Qua">Quarta-feira</option>
-                  <option value="Qui">Quinta-feira</option>
-                  <option value="Sex">Sexta-feira</option>
-                </select>
-              </div>
-              <div className="form-group"><label>Horário (texto livre)</label>
-                <input type="text" placeholder="Ex: 07:30 - 08:20" value={hrHorario} onChange={e => setHrHorario(e.target.value)} />
-              </div>
-            </div>
-            <div className="form-group"><label>Disciplina</label><input type="text" placeholder="Ex: Matemática" value={hrDisciplina} onChange={e => setHrDisciplina(e.target.value)} /></div>
-            <div className="grid-2">
-              <div className="form-group"><label>Sala</label><input type="text" placeholder="Ex: Sala 04 - Matemática" value={hrSala} onChange={e => setHrSala(e.target.value)} /></div>
-              <div className="form-group"><label>Professor(a)</label><input type="text" placeholder="Ex: Luiz" value={hrProfessor} onChange={e => setHrProfessor(e.target.value)} /></div>
-            </div>
-            <div className="form-group"><label>Ordem no dia (1, 2, 3...)</label><input type="number" min={1} value={hrOrdem} onChange={e => setHrOrdem(Number(e.target.value))} /></div>
-            <button className="p-btn p-btn-gold" onClick={addHorario}>+ Adicionar Aula</button>
-          </div>
-
-          <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '.5rem', color: 'var(--navy)' }}>Importar Várias Aulas de Uma Vez</h3>
-            <p style={{ fontSize: '.82rem', color: '#6b7280', marginBottom: '1rem' }}>
-              Usa o <strong>Curso / Ano / Turma</strong> escolhidos acima. Cole uma aula por linha, nesse formato (separado por ponto e vírgula):
-              <br /><code style={{ fontSize: '.75rem' }}>Dia;Horário;Disciplina;Sala;Professor</code>
-              <br />Exemplo: <code style={{ fontSize: '.75rem' }}>Seg;07:30-09:10;IC;Sala 05 - Arte;Jonatas</code>
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '.5rem', color: 'var(--navy)' }}>Horário de Aulas (PDF)</h3>
+            <p style={{ fontSize: '.85rem', color: '#6b7280', marginBottom: '1rem' }}>
+              Envie o PDF com a grade de horários (o mesmo arquivo exportado pelo aSc TimeTables). Todos os alunos e professores vão ver e poder baixar esse arquivo na página "Horários".
             </p>
-            <div className="form-group">
-              <textarea
-                placeholder={'Seg;07:30-09:10;IC;Sala 05 - Arte;Jonatas\nSeg;09:30-10:20;Recomposição L.P.;Sala 10 - Geografia;Stephanie\nTer;07:30-09:10;Arquitetura de Hardware;Sala 03 - Física;Rivanildo'}
-                rows={8}
-                value={hrColagem}
-                onChange={e => setHrColagem(e.target.value)}
-                style={{ fontFamily: 'monospace', fontSize: '.8rem' }}
-              />
-            </div>
-            <button className="p-btn p-btn-gold" disabled={importando} onClick={importarHorariosEmMassa}>
-              {importando ? 'Importando...' : '+ Importar Todas as Linhas'}
-            </button>
-          </div>
-          <div className="admin-form">
-            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
-              Aulas Cadastradas ({horariosList.length})
-            </h3>
-            {horariosList.length === 0 ? (
-              <div className="empty"><div className="empty-icon">🗓️</div><p>Nenhuma aula cadastrada ainda</p></div>
-            ) : horariosList.map(h => (
-              <div key={h.id} style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.7rem 0', borderBottom: '1px dashed var(--p-border)' }}>
+            {horarioPdf && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.8rem', padding: '.8rem', background: 'rgba(26,35,64,.04)', borderRadius: '10px', marginBottom: '1rem' }}>
+                <span style={{ fontSize: '1.4rem' }}>📄</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '.7rem', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '.05em' }}>{h.turma_id} · {h.dia} · {h.horario}</div>
-                  <div style={{ fontSize: '.85rem', fontWeight: 600, color: 'var(--navy)' }}>{h.disciplina}</div>
-                  <div style={{ fontSize: '.75rem', color: '#6b7280' }}>{h.sala}{h.professor ? ` · ${h.professor}` : ''}</div>
+                  <div style={{ fontWeight: 600, fontSize: '.85rem', color: 'var(--navy)' }}>{horarioPdf.nome_arquivo}</div>
+                  <div style={{ fontSize: '.72rem', color: '#9ca3af' }}>Horário atual publicado no site</div>
                 </div>
-                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => delHorario(h.id)}>
+                <button className="p-btn p-btn-outline p-btn-sm" style={{ color: '#dc2626', borderColor: '#dc2626', flexShrink: 0 }} onClick={() => excluirPdf(horarioPdf.id)}>
                   🗑️
                 </button>
               </div>
-            ))}
+            )}
+            <div className="form-group">
+              <label>{horarioPdf ? 'Substituir por um novo PDF' : 'Selecionar PDF'}</label>
+              <input type="file" accept="application/pdf" onChange={e => setPdfArquivo(e.target.files?.[0] || null)} />
+            </div>
+            <button className="p-btn p-btn-gold" disabled={enviandoPdf} onClick={enviarPdf}>
+              {enviandoPdf ? 'Enviando...' : '+ Publicar Horário'}
+            </button>
           </div>
         </div>
       )}
@@ -914,4 +804,3 @@ export default function Admin({ onToast }: Props) {
     </div>
   );
 }
-
