@@ -183,33 +183,41 @@ export async function removerAvisoSala(id: string) {
   if (error) throw error;
 }
 
-/* ================= Horários de aula ================= */
-export type HorarioDB = {
+/* ================= Horário de aula (PDF) ================= */
+export type HorarioPdfDB = {
   id: string;
-  turma_id: string;
-  dia: 'Seg' | 'Ter' | 'Qua' | 'Qui' | 'Sex';
-  horario: string;
-  disciplina: string;
-  sala: string | null;
-  professor: string | null;
-  ordem: number;
+  url: string;
+  nome_arquivo: string;
+  created_at?: string;
 };
 
-export async function listarHorarios(turmaId?: string): Promise<HorarioDB[]> {
-  let query = db.from('horarios').select('*').order('ordem', { ascending: true });
-  if (turmaId) query = query.eq('turma_id', turmaId);
-  const { data, error } = await query;
-  if (error || !data) return [];
-  return data as HorarioDB[];
+export async function buscarHorarioAtual(): Promise<HorarioPdfDB | null> {
+  const { data, error } = await db
+    .from('horario_pdf')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as HorarioPdfDB;
 }
 
-export async function criarHorario(h: Omit<HorarioDB, 'id'>) {
-  const { error } = await db.from('horarios').insert(h);
+export async function enviarHorarioPdf(arquivo: File): Promise<void> {
+  const caminho = `horarios/${Date.now()}-${arquivo.name}`;
+  const { error: upErr } = await db.storage.from('materiais').upload(caminho, arquivo);
+  if (upErr) throw upErr;
+
+  const { data: urlData } = db.storage.from('materiais').getPublicUrl(caminho);
+
+  const { error } = await db.from('horario_pdf').insert({
+    url: urlData.publicUrl,
+    nome_arquivo: arquivo.name,
+  });
   if (error) throw error;
 }
 
-export async function removerHorario(id: string) {
-  const { error } = await db.from('horarios').delete().eq('id', id);
+export async function removerHorarioPdf(id: string): Promise<void> {
+  const { error } = await db.from('horario_pdf').delete().eq('id', id);
   if (error) throw error;
 }
 
