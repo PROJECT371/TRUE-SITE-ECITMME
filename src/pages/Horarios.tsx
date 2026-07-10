@@ -50,13 +50,13 @@ export default function Horarios() {
             </a>
             <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--p-border)' }}>
               <iframe
-                src={pdf.url}
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(pdf.url)}&embedded=true`}
                 title="Horário de aulas"
                 style={{ width: '100%', height: '75vh', border: 'none', display: 'block' }}
               />
             </div>
             <p style={{ fontSize: '.78rem', color: '#9ca3af', marginTop: '.6rem' }}>
-              Se a visualização não carregar no seu navegador, use o botão de baixar acima.
+              Se a visualização demorar a carregar, aguarde alguns segundos ou use o botão de baixar acima.
             </p>
           </div>
         </div>
