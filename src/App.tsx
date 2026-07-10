@@ -10,14 +10,16 @@ import Clubes from "@/pages/Clubes";
 import Salas from "@/pages/Salas";
 import Interclasse from "@/pages/Interclasse";
 import Eventos from "@/pages/Eventos";
+import Galeria from "@/pages/Galeria";
 import Admin from "@/pages/Admin";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineScreen from "@/components/OfflineScreen";
 import AuthModal from "@/components/AuthModal";
+import NotificationBell from "@/components/NotificationBell";
 import { db } from "@/lib/supabase";
 import { sair, buscarPerfil, type Perfil } from "@/lib/auth";
 
-type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'horarios' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'interclasse' | 'eventos' | 'admin';
+type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'horarios' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'galeria' | 'interclasse' | 'eventos' | 'admin';
 
 const NAV_ITEMS: Array<{ id: Section; label: string; icon: string }> = [
   { id: 'inicio',      label: 'Início',      icon: '🏠' },
@@ -29,6 +31,7 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: string }> = [
   { id: 'secretaria',  label: 'Secretaria',  icon: '📢' },
   { id: 'clubes',      label: 'Clubes',      icon: '🎭' },
   { id: 'salas',       label: 'Salas',       icon: '🏫' },
+  { id: 'galeria',     label: 'Galeria',     icon: '🖼️' },
   { id: 'interclasse', label: 'Interclasse', icon: '🏆' },
   { id: 'eventos',     label: 'Eventos',     icon: '🗓️' },
 ];
@@ -129,6 +132,7 @@ export default function App() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
+            <NotificationBell perfil={perfil} onNavigate={navigate} />
             {perfil ? (
               <button
                 className="btn-admin"
@@ -189,6 +193,7 @@ export default function App() {
         {section === 'secretaria'  && <Secretaria perfil={perfil} onToast={showToast} />}
         {section === 'clubes'      && <Clubes perfil={perfil} onToast={showToast} />}
         {section === 'salas'       && <Salas perfil={perfil} />}
+        {section === 'galeria'     && <Galeria />}
         {section === 'interclasse' && <Interclasse />}
         {section === 'eventos'     && <Eventos />}
         {section === 'admin'       && <Admin onToast={showToast} />}
