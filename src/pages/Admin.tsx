@@ -8,6 +8,7 @@ import {
   listarAvisosSalas, criarAvisoSala, removerAvisoSala, type AvisoSalaDB,
   listarSolicitacoes, atualizarStatusSolicitacao, removerSolicitacao, type SolicitacaoDB,
   buscarHorarioAtual, enviarHorarioPdf, removerHorarioPdf, type HorarioPdfDB,
+  listarFotos, enviarFoto, removerFoto, type FotoDB,
 } from "@/lib/dados";
 
 interface Props {
@@ -33,6 +34,10 @@ export default function Admin({ onToast }: Props) {
   const [horarioPdf, setHorarioPdf] = useState<HorarioPdfDB | null>(null);
   const [pdfArquivo, setPdfArquivo] = useState<File | null>(null);
   const [enviandoPdf, setEnviandoPdf] = useState(false);
+  const [fotosList, setFotosList] = useState<FotoDB[]>([]);
+  const [fotoArquivo, setFotoArquivo] = useState<File | null>(null);
+  const [fotoLegenda, setFotoLegenda] = useState('');
+  const [enviandoFoto, setEnviandoFoto] = useState(false);
 
   useEffect(() => {
     listarEventos().then(setEventosList);
@@ -42,6 +47,7 @@ export default function Admin({ onToast }: Props) {
     listarAvisosSalas().then(setAvisosSalasList);
     listarSolicitacoes().then(setSolicitacoesList);
     buscarHorarioAtual().then(setHorarioPdf);
+    listarFotos().then(setFotosList);
   }, []);
 
   // Eventos form
@@ -315,6 +321,33 @@ export default function Admin({ onToast }: Props) {
     }
   }
 
+  async function enviarFotoForm() {
+    if (!fotoArquivo) { onToast('⚠️ Selecione uma foto'); return; }
+    setEnviandoFoto(true);
+    try {
+      await enviarFoto(fotoArquivo, fotoLegenda);
+      setFotosList(await listarFotos());
+      setFotoArquivo(null);
+      setFotoLegenda('');
+      onToast('✅ Foto publicada na galeria!');
+    } catch {
+      onToast('❌ Não foi possível enviar a foto.');
+    } finally {
+      setEnviandoFoto(false);
+    }
+  }
+
+  async function excluirFoto(id: string) {
+    if (!window.confirm('Remover esta foto da galeria?')) return;
+    try {
+      await removerFoto(id);
+      setFotosList(await listarFotos());
+      onToast('🗑️ Foto removida.');
+    } catch {
+      onToast('❌ Não foi possível remover.');
+    }
+  }
+
   const adminTabs = [
     { id: 'eventos',    label: '🗓️ Eventos' },
     { id: 'avisos',     label: '🔔 Avisos' },
@@ -325,6 +358,7 @@ export default function Admin({ onToast }: Props) {
     { id: 'solicitacoes', label: '📝 Solicitações' },
     { id: 'clubes',     label: '🎭 Clubes' },
     { id: 'salas',      label: '🏫 Salas' },
+    { id: 'galeria',    label: '🖼️ Galeria' },
     { id: 'jogos',      label: '🏆 Interclasse' },
     { id: 'livros',     label: '📚 Biblioteca' },
   ];
@@ -792,6 +826,46 @@ export default function Admin({ onToast }: Props) {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── GALERIA ── */}
+      {adminTab === 'galeria' && (
+        <div>
+          <div className="admin-form" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1.2rem', color: 'var(--navy)' }}>Publicar Foto</h3>
+            <div className="form-group"><label>Foto</label>
+              <input type="file" accept="image/*" onChange={e => setFotoArquivo(e.target.files?.[0] || null)} />
+            </div>
+            <div className="form-group"><label>Legenda (opcional)</label>
+              <input type="text" placeholder="Ex: Festa Junina 2026" value={fotoLegenda} onChange={e => setFotoLegenda(e.target.value)} />
+            </div>
+            <button className="p-btn p-btn-gold" disabled={enviandoFoto} onClick={enviarFotoForm}>
+              {enviandoFoto ? 'Enviando...' : '+ Publicar Foto'}
+            </button>
+          </div>
+          <div className="admin-form">
+            <h3 style={{ fontFamily: 'var(--font-h)', marginBottom: '1rem', color: 'var(--navy)' }}>
+              Fotos Publicadas ({fotosList.length})
+            </h3>
+            {fotosList.length === 0 ? (
+              <div className="empty"><div className="empty-icon">🖼️</div><p>Nenhuma foto publicada ainda</p></div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '.6rem' }}>
+                {fotosList.map(f => (
+                  <div key={f.id} style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', aspectRatio: '1' }}>
+                    <img src={f.url} alt={f.legenda || ''} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <button
+                      onClick={() => excluirFoto(f.id)}
+                      style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(220,38,38,.9)', color: '#fff', border: 'none', borderRadius: '6px', width: '24px', height: '24px', fontSize: '.7rem', cursor: 'pointer' }}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
