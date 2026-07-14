@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { store } from "@/data/store";
 import { listarEventos, type EventoDB } from "@/lib/dados";
+import Interclasse from "@/pages/Interclasse";
 
 type EventoView = {
   id: string;
@@ -38,6 +39,7 @@ export default function Eventos() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('todos');
   const [selected, setSelected] = useState<EventoView | null>(null);
+  const [abaPrincipal, setAbaPrincipal] = useState<'calendario' | 'interclasse'>('calendario');
 
   useEffect(() => {
     listarEventos().then(lista => {
@@ -102,6 +104,19 @@ export default function Eventos() {
         </div>
       </div>
 
+      <div className="tab-row">
+        <button className={`p-tab ${abaPrincipal === 'calendario' ? 'active' : ''}`} onClick={() => setAbaPrincipal('calendario')}>
+          📅 Calendário
+        </button>
+        <button className={`p-tab ${abaPrincipal === 'interclasse' ? 'active' : ''}`} onClick={() => setAbaPrincipal('interclasse')}>
+          🏆 Interclasse
+        </button>
+      </div>
+
+      {abaPrincipal === 'interclasse' ? (
+        <Interclasse />
+      ) : (
+        <>
       {/* Próximo destaque */}
       {next && (
         <div className="event-hero" style={{ borderColor: next.cor }}>
@@ -245,6 +260,8 @@ export default function Eventos() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );
