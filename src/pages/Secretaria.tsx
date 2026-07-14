@@ -73,8 +73,12 @@ export default function Secretaria({ perfil, onToast }: Props) {
   }
 
   async function solicitar(tipo: string) {
+    if (!ehAluno) {
+      onToast('⚠️ Faça login como aluno(a) para solicitar documentos.');
+      return;
+    }
     try {
-      await criarSolicitacao(tipo, ehAluno ? perfil?.nome : undefined);
+      await criarSolicitacao(tipo, perfil!.nome);
       await carregar();
       onToast(`✅ Solicitação de "${tipo}" enviada!`);
     } catch {
@@ -226,24 +230,36 @@ export default function Secretaria({ perfil, onToast }: Props) {
         </div>
       )}
 
-      {/* Nova solicitação (qualquer visitante) */}
+      {/* Nova solicitação (requer login de aluno) */}
       <div className="p-card" style={{ marginBottom: '1.5rem' }}>
         <div className="p-card-header">
           <div className="p-card-icon gold">📝</div>
           <div className="p-card-title">Solicitar documento</div>
         </div>
         <div className="p-card-body">
-          <div className="grid-2">
-            {['Declaração escolar', 'Comprovante de matrícula', 'Histórico escolar', 'Boletim'].map(tp => (
-              <button key={tp} className="p-btn p-btn-outline" style={{ width: '100%' }} onClick={() => solicitar(tp)}>
-                + {tp}
-              </button>
-            ))}
-          </div>
+          {!ehAluno ? (
+            <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+              <p style={{ fontSize: '.88rem', color: '#6b7280', marginBottom: '.3rem' }}>
+                🔒 Você precisa estar logado como <strong>aluno(a)</strong> para solicitar documentos.
+              </p>
+              <p style={{ fontSize: '.8rem', color: '#9ca3af' }}>
+                Toque em "Entrar" no topo da página pra fazer login ou criar sua conta.
+              </p>
+            </div>
+          ) : (
+            <div className="grid-2">
+              {['Declaração escolar', 'Comprovante de matrícula', 'Histórico escolar', 'Boletim'].map(tp => (
+                <button key={tp} className="p-btn p-btn-outline" style={{ width: '100%' }} onClick={() => solicitar(tp)}>
+                  + {tp}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Minhas solicitações */}
+      {perfil && (
       <div className="p-card" style={{ marginBottom: '1.5rem' }}>
         <div className="p-card-header">
           <div className="p-card-icon navy">📋</div>
@@ -260,6 +276,7 @@ export default function Secretaria({ perfil, onToast }: Props) {
           ))}
         </div>
       </div>
+      )}
 
       {/* Avisos e comunicados */}
       <div className="tab-row">
@@ -295,4 +312,3 @@ export default function Secretaria({ perfil, onToast }: Props) {
     </div>
   );
 }
-
