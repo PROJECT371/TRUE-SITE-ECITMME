@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import { store, fmtDate, turmaNome } from "@/data/store";
 import { listarProvas, listarAvisos, type ProvaDB, type AvisoDB } from "@/lib/dados";
+import type { Perfil } from "@/lib/auth";
 
 type Section = string;
 
 interface Props {
   onNavigate: (s: Section) => void;
+  perfil: Perfil | null;
 }
 
-export default function Inicio({ onNavigate }: Props) {
+export default function Inicio({ onNavigate, perfil }: Props) {
   const [provas, setProvas] = useState<ProvaDB[]>([]);
   const [avisos, setAvisos] = useState<AvisoDB[]>([]);
+  const logado = !!perfil;
 
   useEffect(() => {
     listarProvas().then(setProvas);
@@ -45,24 +48,28 @@ export default function Inicio({ onNavigate }: Props) {
 
       {/* Highlights */}
       <div className="highlight-grid">
-        <div className="highlight-card hc-gold">
-          <div className="hc-label">📋 Próxima Prova</div>
-          <div className="hc-value">{upcoming ? upcoming.disciplina : 'Sem provas agendadas'}</div>
-          <div className="hc-sub">{upcoming ? `${turmaNome(upcoming.turma)} · ${fmtDate(upcoming.data)}` : '–'}</div>
-        </div>
-        <div className="highlight-card hc-navy">
-          <div className="hc-label">🔔 Último Aviso</div>
-          <div className="hc-value">{lastAviso ? lastAviso.titulo : 'Sem avisos'}</div>
-          <div className="hc-sub">{lastAviso ? fmtDate(lastAviso.data) : '–'}</div>
-        </div>
-        <div className="highlight-card hc-teal">
-          <div className="hc-label">🏆 Próximo Jogo</div>
-          <div className="hc-value">{nextGame ? `${nextGame.a} × ${nextGame.b}` : '–'}</div>
-          <div className="hc-sub">{nextGame ? `${fmtDate(nextGame.data)} · ${nextGame.hora} · ${nextGame.mod}` : '–'}</div>
-        </div>
+        {logado && (
+          <>
+            <div className="highlight-card hc-gold">
+              <div className="hc-label">📋 Próxima Prova</div>
+              <div className="hc-value">{upcoming ? upcoming.disciplina : 'Sem provas agendadas'}</div>
+              <div className="hc-sub">{upcoming ? `${turmaNome(upcoming.turma)} · ${fmtDate(upcoming.data)}` : '–'}</div>
+            </div>
+            <div className="highlight-card hc-navy">
+              <div className="hc-label">🔔 Último Aviso</div>
+              <div className="hc-value">{lastAviso ? lastAviso.titulo : 'Sem avisos'}</div>
+              <div className="hc-sub">{lastAviso ? fmtDate(lastAviso.data) : '–'}</div>
+            </div>
+            <div className="highlight-card hc-teal">
+              <div className="hc-label">🏆 Próximo Jogo</div>
+              <div className="hc-value">{nextGame ? `${nextGame.a} × ${nextGame.b}` : '–'}</div>
+              <div className="hc-sub">{nextGame ? `${fmtDate(nextGame.data)} · ${nextGame.hora} · ${nextGame.mod}` : '–'}</div>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Cards row */}
+      {logado && (
       <div className="grid-2">
         {/* Provas */}
         <div className="p-card">
@@ -120,6 +127,14 @@ export default function Inicio({ onNavigate }: Props) {
           </div>
         </div>
       </div>
+      )}
+
+      {!logado && (
+        <div className="empty" style={{ margin: '1.5rem 0' }}>
+          <div className="empty-icon">🔒</div>
+          <p>Provas, avisos e eventos ficam disponíveis depois que você faz login.<br />Toque em "Entrar" no topo da página.</p>
+        </div>
+      )}
 
       {/* Corpo Diretivo */}
       <h2 style={{ fontFamily: 'var(--font-h)', fontSize: '1.4rem', color: 'var(--navy)', margin: '2rem 0 1.2rem' }}>
