@@ -75,12 +75,6 @@ export default function App() {
   }, []);
 
   function navigate(s: string) {
-    if (!perfil && s !== 'inicio' && s !== 'admin') {
-      showToast('🔒 Faça login para acessar essa área.');
-      setSection('inicio');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
     setSection(s as Section);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -170,7 +164,7 @@ export default function App() {
         {/* Nav */}
         <nav className="portal-nav">
           <div className="nav-inner">
-            {(perfil ? NAV_ITEMS : NAV_ITEMS.filter(n => n.id === 'inicio')).map(n => (
+            {NAV_ITEMS.map(n => (
               <button
                 key={n.id}
                 className={`nav-item ${section === n.id ? 'active' : ''}`}
