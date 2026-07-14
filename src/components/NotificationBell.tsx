@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { listarEventos, listarAvisos, listarAvisosSalas, listarFotos } from "@/lib/dados";
+import { listarEventos, listarAvisos, listarAvisosSalas } from "@/lib/dados";
 import type { Perfil } from "@/lib/auth";
 
 type Item = {
   id: string;
-  tipo: 'evento' | 'aviso' | 'sala' | 'foto';
+  tipo: 'evento' | 'aviso' | 'sala';
   titulo: string;
   criadoEm: string;
 };
@@ -15,8 +15,8 @@ interface Props {
 }
 
 const LS_KEY = 'ecit_notif_last_seen';
-const ICONS: Record<Item['tipo'], string> = { evento: '🗓️', aviso: '📢', sala: '🏫', foto: '🖼️' };
-const SECOES: Record<Item['tipo'], string> = { evento: 'eventos', aviso: 'secretaria', sala: 'salas', foto: 'galeria' };
+const ICONS: Record<Item['tipo'], string> = { evento: '🗓️', aviso: '📢', sala: '🏫' };
+const SECOES: Record<Item['tipo'], string> = { evento: 'eventos', aviso: 'secretaria', sala: 'salas' };
 
 export default function NotificationBell({ perfil, onNavigate }: Props) {
   const [itens, setItens] = useState<Item[]>([]);
@@ -24,8 +24,8 @@ export default function NotificationBell({ perfil, onNavigate }: Props) {
   const [loading, setLoading] = useState(true);
 
   async function carregar() {
-    const [eventos, avisos, avisosSalas, fotos] = await Promise.all([
-      listarEventos(), listarAvisos(), listarAvisosSalas(), listarFotos(),
+    const [eventos, avisos, avisosSalas] = await Promise.all([
+      listarEventos(), listarAvisos(), listarAvisosSalas(),
     ]);
 
     const minhaTurma = perfil?.role === 'aluno' ? perfil.turma : null;
@@ -36,7 +36,6 @@ export default function NotificationBell({ perfil, onNavigate }: Props) {
       ...avisosSalas
         .filter(s => !minhaTurma || s.sala_id === minhaTurma)
         .map(s => ({ id: `sala-${s.id}`, tipo: 'sala' as const, titulo: s.texto, criadoEm: s.created_at || '' })),
-      ...fotos.map(f => ({ id: `foto-${f.id}`, tipo: 'foto' as const, titulo: f.legenda || 'Nova foto na galeria', criadoEm: f.created_at || '' })),
     ]
       .filter(i => i.criadoEm)
       .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
