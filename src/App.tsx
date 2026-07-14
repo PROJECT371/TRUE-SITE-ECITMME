@@ -10,7 +10,6 @@ import Clubes from "@/pages/Clubes";
 import Salas from "@/pages/Salas";
 import Interclasse from "@/pages/Interclasse";
 import Eventos from "@/pages/Eventos";
-import Galeria from "@/pages/Galeria";
 import Admin from "@/pages/Admin";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineScreen from "@/components/OfflineScreen";
@@ -19,7 +18,7 @@ import NotificationBell from "@/components/NotificationBell";
 import { db } from "@/lib/supabase";
 import { sair, buscarPerfil, type Perfil } from "@/lib/auth";
 
-type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'horarios' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'galeria' | 'interclasse' | 'eventos' | 'admin';
+type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'horarios' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'interclasse' | 'eventos' | 'admin';
 
 const NAV_ITEMS: Array<{ id: Section; label: string; icon: string }> = [
   { id: 'inicio',      label: 'Início',      icon: '🏠' },
@@ -31,7 +30,6 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: string }> = [
   { id: 'secretaria',  label: 'Secretaria',  icon: '📢' },
   { id: 'clubes',      label: 'Clubes',      icon: '🎭' },
   { id: 'salas',       label: 'Salas',       icon: '🏫' },
-  { id: 'galeria',     label: 'Galeria',     icon: '🖼️' },
   { id: 'interclasse', label: 'Interclasse', icon: '🏆' },
   { id: 'eventos',     label: 'Eventos',     icon: '🗓️' },
 ];
@@ -193,7 +191,6 @@ export default function App() {
         {section === 'secretaria'  && <Secretaria perfil={perfil} onToast={showToast} />}
         {section === 'clubes'      && <Clubes perfil={perfil} onToast={showToast} />}
         {section === 'salas'       && <Salas perfil={perfil} />}
-        {section === 'galeria'     && <Galeria />}
         {section === 'interclasse' && <Interclasse />}
         {section === 'eventos'     && <Eventos />}
         {section === 'admin'       && <Admin onToast={showToast} />}
@@ -203,6 +200,14 @@ export default function App() {
       <footer style={{ background: 'var(--navy)', color: 'rgba(255,255,255,.5)', textAlign: 'center', padding: '2rem 1.5rem', fontSize: '.78rem' }}>
         <div style={{ fontFamily: 'var(--font-h)', fontSize: '1rem', color: 'var(--gold2)', marginBottom: '.4rem' }}>ECIT João Da Matta</div>
         <div>Mamanguape – Paraíba · SEDUC-PB · Portal Escolar 2025</div>
+        <a
+          href="https://instagram.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '.4rem', marginTop: '1rem', color: 'var(--gold2)', textDecoration: 'none', fontSize: '.85rem', fontWeight: 600 }}
+        >
+          📷 Siga a escola no Instagram
+        </a>
         <div style={{ marginTop: '.8rem', color: 'rgba(201,153,58,.5)', fontSize: '.7rem' }}>Desenvolvido pela equipe pedagógica · Ano letivo 2025</div>
       </footer>
 
