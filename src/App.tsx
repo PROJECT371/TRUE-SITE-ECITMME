@@ -75,6 +75,12 @@ export default function App() {
   }, []);
 
   function navigate(s: string) {
+    if (!perfil && s !== 'inicio' && s !== 'admin') {
+      showToast('🔒 Faça login para acessar essa área.');
+      setSection('inicio');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     setSection(s as Section);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -128,7 +134,7 @@ export default function App() {
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <NotificationBell perfil={perfil} onNavigate={navigate} />
+            {perfil && <NotificationBell perfil={perfil} onNavigate={navigate} />}
             {perfil ? (
               <button
                 className="btn-admin"
@@ -164,7 +170,7 @@ export default function App() {
         {/* Nav */}
         <nav className="portal-nav">
           <div className="nav-inner">
-            {NAV_ITEMS.map(n => (
+            {(perfil ? NAV_ITEMS : NAV_ITEMS.filter(n => n.id === 'inicio')).map(n => (
               <button
                 key={n.id}
                 className={`nav-item ${section === n.id ? 'active' : ''}`}
@@ -180,7 +186,7 @@ export default function App() {
 
       {/* Main */}
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2.5rem 1.5rem', minHeight: '70vh' }}>
-        {section === 'inicio'      && <Inicio onNavigate={navigate} />}
+        {section === 'inicio'      && <Inicio onNavigate={navigate} perfil={perfil} />}
         {section === 'disciplinas' && <Disciplinas perfil={perfil} onToast={showToast} />}
         {section === 'biblioteca'  && <Biblioteca perfil={perfil} onToast={showToast} />}
         {section === 'provas'      && <Provas />}
