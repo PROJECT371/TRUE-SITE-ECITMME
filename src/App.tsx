@@ -8,7 +8,6 @@ import Conteudos from "@/pages/Conteudos";
 import Secretaria from "@/pages/Secretaria";
 import Clubes from "@/pages/Clubes";
 import Salas from "@/pages/Salas";
-import Interclasse from "@/pages/Interclasse";
 import Eventos from "@/pages/Eventos";
 import Admin from "@/pages/Admin";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -18,7 +17,7 @@ import NotificationBell from "@/components/NotificationBell";
 import { db } from "@/lib/supabase";
 import { sair, buscarPerfil, type Perfil } from "@/lib/auth";
 
-type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'horarios' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'interclasse' | 'eventos' | 'admin';
+type Section = 'inicio' | 'disciplinas' | 'biblioteca' | 'provas' | 'horarios' | 'conteudos' | 'secretaria' | 'clubes' | 'salas' | 'eventos' | 'admin';
 
 const NAV_ITEMS: Array<{ id: Section; label: string; icon: string }> = [
   { id: 'inicio',      label: 'Início',      icon: '🏠' },
@@ -30,7 +29,6 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: string }> = [
   { id: 'secretaria',  label: 'Secretaria',  icon: '📢' },
   { id: 'clubes',      label: 'Clubes',      icon: '🎭' },
   { id: 'salas',       label: 'Salas',       icon: '🏫' },
-  { id: 'interclasse', label: 'Interclasse', icon: '🏆' },
   { id: 'eventos',     label: 'Eventos',     icon: '🗓️' },
 ];
 
@@ -191,7 +189,6 @@ export default function App() {
         {section === 'secretaria'  && <Secretaria perfil={perfil} onToast={showToast} />}
         {section === 'clubes'      && <Clubes perfil={perfil} onToast={showToast} />}
         {section === 'salas'       && <Salas perfil={perfil} />}
-        {section === 'interclasse' && <Interclasse />}
         {section === 'eventos'     && <Eventos />}
         {section === 'admin'       && <Admin onToast={showToast} />}
       </main>
